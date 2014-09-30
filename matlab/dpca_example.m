@@ -24,9 +24,10 @@
 %
 % firingRatesAverage -- average of firingRates over trials (5th dimension).
 % If the firingRates is filled up with nans, then it's simply
-% nanmean(firingRates,5). If it's filled up with zeros (as is convenient if
-% it's stored on hard drive as a sparse matrix), then one needs loops to
-% compute the average.
+%    firingRatesAverage = nanmean(firingRates,5)
+% If it's filled up with zeros (as is convenient if it's stored on hard 
+% drive as a sparse matrix), then 
+%    firingRatesAverage = bsxfun(@times, mean(firingRates,5), size(firingRates,5)./trialNum)
 
 clear all
 
