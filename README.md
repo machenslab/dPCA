@@ -13,11 +13,11 @@ This repository provides easy to use Python and MATLAB implementations of dPCA a
 
 ## Use dPCA
 
-Simple example code for surrogate data can be found in **dpca_demo.py** and **dpca_demo.m**, and is reproduced at the end of this README.
+Simple example code for surrogate data can be found in **dpca_demo.ipynb** and **dpca_demo.m**. The Ipython notebook can also be viewed statically at ????.
 
 ### Python package
 
-To install, first make sure that numpy, scipy, sklearn, itertools and numexpr are avaible. Then do `pip install git+????` or download, unpack and run `python setup.py install`.
+To install, first make sure that numpy, cython, scipy, sklearn, itertools and numexpr are avaible. Then copy the files from the Python subfolder to a location in the Python serach path.
 
 API of dPCA is similar to sklearn. To use dPCA, you should first import dPCA,  
 `from dpca import dPCA`  
@@ -40,23 +40,3 @@ More detailed documentation, and additional options, can be found in **dpca.py**
 Email wieland.brendel@bethgelab.org (Python) or dmitry.kobak@neuro.fchampalimaud.org (Matlab) with questions if you don't find your answer here.
 
 #### What if not all parameter combinations are measured?
-
-## Example code
-
-The following code runs dPCA on surrogate in Python and MATLAB respectively. Identical code is in **dpca_demo.py** and **dpca_demo.m**.
-
-### Python example code
-
-```python
-import matplotlib.pyplot as plt
-import numpy as np
-from numpy.random import randn
-from dpca import dPCA
-
-```
-
-### MATLAB example code
-
-```MATLAB
-
-```
