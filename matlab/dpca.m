@@ -123,7 +123,8 @@ for i=1:length(Xmargs)
     % fast dirty way
     
     % catching possible warning
-    s = warning('error','MATLAB:singularMatrix');
+    s1 = warning('error','MATLAB:singularMatrix');
+    s2 = warning('error','MATLAB:nearlySingularMatrix');
     try
         C = Xf*Xr'/(Xr*Xr');
     catch exception
@@ -133,7 +134,8 @@ for i=1:length(Xmargs)
         Xf = [Xmargs{i} zeros(size(X,1))];
         C = Xf*Xr'/(Xr*Xr');
     end
-    warning(s)
+    warning(s1)
+    warning(s2)
     
     M = C*Xr;
     [U,~,~] = eigs(M*M', nc);

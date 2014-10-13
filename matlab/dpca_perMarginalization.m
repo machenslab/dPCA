@@ -69,14 +69,11 @@ totalVar = sum(X(:).^2);
 
 PCs = [];
 vars = [];
-PCaxes = [];
 
 for m=1:length(Xmargs)
-    [U,S,V] = svd(Xmargs{m});
+    [~,S,V] = svd(Xmargs{m});
     PCs = [PCs; S(1:10,1:10)*V(:,1:10)'];
     vars = [vars; diag(S(1:10,1:10)).^2];
-
-    PCaxes = [PCaxes U(:,1:2)];
 end
 [~,ind] = sort(vars,'descend');
 PCs = PCs(ind,:);
