@@ -6,14 +6,13 @@ dPCA is a linear dimensionality reduction technique that automatically discovers
 > D Kobak*, W Brendel*, C Constantinidis, C Feierstein,
 A Kepecs, Z Mainen, R Romo, X-L Qi, N Uchida, C Machens<br>
 > *Demixed principal component analysis of population activity in higher cortical areas reveals independent representation of task parameters*<br>
-> arXiv preprint arXiv:????.???? (2014)<br>
-> http://arxiv.org/abs/????.????
+> http://arxiv.org/abs/1410.6031
 
 This repository provides easy to use Python and MATLAB implementations of dPCA as well as example code.
 
 ## Use dPCA
 
-Simple example code for surrogate data can be found in **dpca_demo.ipynb** and **dpca_demo.m**. The Ipython notebook can also be viewed statically at ????.
+Simple example code for surrogate data can be found in **dpca_demo.ipynb** and **dpca_demo.m**.
 
 ### Python package
 
