@@ -12,7 +12,7 @@ This repository provides easy to use Python and MATLAB implementations of dPCA a
 
 ## Use dPCA
 
-Simple example code for surrogate data can be found in **dpca_demo.ipynb** and **dpca_demo.m**.
+Simple example code for surrogate data can be found in [**dpca_demo.ipynb**](http://nbviewer.ipython.org/github/wielandbrendel/dPCA/blob/master/python/dPCA_demo.ipynb) and **dpca_demo.m**.
 
 ### Python package
 
