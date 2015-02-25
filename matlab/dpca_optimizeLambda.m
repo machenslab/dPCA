@@ -112,7 +112,7 @@ for rep = 1:options.numRep
         [W,V,whichMarg] = dpca(Xtrain, options.numComps, ...
             'combinedParams', options.combinedParams, ...
             'lambda', options.lambdas(l));
-        
+                        
         cumError = 0;
         for i=1:length(XtestMargs)
             recError = 0;
@@ -144,6 +144,7 @@ for rep = 1:options.numRep
         
         errors(l,rep) = cumError / sum(margVar_toNormalize);
     end
+        
     fprintf('\n')
 end
 
@@ -207,5 +208,5 @@ if strcmp(options.display, 'yes')
     set(gca,'XTickLabel', xtickLabels)
     
     plot(xlim, [1 1], 'k')
-    axis([log(options.lambdas(1)) log(options.lambdas(end)) 0 1.2])
+    axis([log(min(options.lambdas)) log(max(options.lambdas)) 0 1.2])
 end

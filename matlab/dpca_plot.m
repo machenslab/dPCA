@@ -106,7 +106,22 @@ if ~isempty(options.whichMarg) && ...
     end
 else
     % if there are more than 4 marginalizatons
-    componentsToPlot = 1:12;
+    
+    if isempty(options.whichMarg)
+        % if there is no info about marginaliations
+        componentsToPlot = 1:12;
+    else
+        % if there is info about marginaliations, select first 3 in each
+        uni = unique(options.whichMarg);
+        componentsToPlot = [];
+        for u = 1:length(uni)
+            componentsToPlot = [componentsToPlot find(options.whichMarg==uni(u),4)];
+        end
+        componentsToPlot = sort(componentsToPlot);
+        if length(componentsToPlot) > 12
+            componentsToPlot = componentsToPlot(1:12);
+        end
+    end
     subplots = [2 3 4 6 7 8 10 11 12 14 15 16];
     
     if numCompToShow < 12
@@ -286,8 +301,8 @@ b = V(:,1:numCompToShow)'*V(:,1:numCompToShow);
 % display(['Maximal correlation: ' num2str(max(abs(a(a<0.999))))])
 % display(['Minimal angle: ' num2str(acosd(max(abs(b(b<0.999)))))])
 
-[csp, psp] = corr(V(:,1:numCompToShow), 'type', 'Spearman');
-[cpr, ppr] = corr(V(:,1:numCompToShow));
+[~, psp] = corr(V(:,1:numCompToShow), 'type', 'Kendall');
+%[cpr, ppr] = corr(V(:,1:numCompToShow));
 map = tril(a,-1)+triu(b);
 
 axColormap = subplot(4,4,13);
@@ -302,7 +317,7 @@ set(cb, 'xlim', [L+1 L+256], 'XTick', [L+1:65:L+256 L+256], 'XTickLabel', -1:0.5
 
 hold on
 [i,j] = ind2sub(size(triu(b,1)), ...
-    find(abs(triu(b,1)) > 3.3/sqrt(size(Xfull,1)) & psp<0.001 & abs(csp)>0.2));
+    find(abs(triu(b,1)) > 3.3/sqrt(size(Xfull,1)) & psp<0.001)); % & abs(csp)>0.02));
 plot(j,i,'k*')
 
 
@@ -372,17 +387,35 @@ if ~isempty(options.explainedVar)
     
     if isfield(options.explainedVar, 'cumulativePCA_signal')
         d = options.explainedVar.totalMarginalizedVar_signal / options.explainedVar.totalVar_signal * 100;
+       
+        % In some rare cases the *signal* explained variances can be
+        % negative (usually around 0 though); this means that the
+        % corresponding marginalization does not carry [almost] any signal.
+        % In order to avoid confusing pie charts, we set those to zero and
+        % rescale the others to sum to 100%.
+        if ~isempty(find(d<0, 1))
+            d(d<0) = 0;
+            d = d/sum(d)*100;
+        end
     else
         d = options.explainedVar.totalMarginalizedVar / options.explainedVar.totalVar * 100;
     end
     
+    % Rounding such that the rounded values still sum to 100%. Using
+    % "largest remainder method" of allocation
+    roundedD = floor(d);
+    while sum(roundedD) < 100
+        [~, ind] = max(d-roundedD);
+        roundedD(ind) = roundedD(ind) + 1;
+    end
+    
     if ~isempty(options.marginalizationNames)
         for i=1:length(d)
-            margNamesPerc{i} = [options.marginalizationNames{i} ' ' num2str(round(d(i))) '%'];
+            margNamesPerc{i} = [options.marginalizationNames{i} ' ' num2str(roundedD(i)) '%'];
         end
     else
         for i=1:length(d)
-            margNamesPerc{i} = [num2str(round(d(i))) '%'];
+            margNamesPerc{i} = [num2str(roundedD(i)) '%'];
         end
     end
     pie(d, ones(size(d)), margNamesPerc)

@@ -47,6 +47,10 @@ function [W, V, whichMarg] = dpca(Xfull, numComps, varargin)
 %                     of cell arrays specifying which marginalizations
 %                     should NOT be split. If not provided, all
 %                     marginalizations will be split.
+%
+% 'scale'           - if 'yes', decoder of each component will be scaled to
+%                     have an optimal length (leading to the minimal
+%                     reconstruction error). Default is 'no'.
 
 % default input parameters
 options = struct('combinedParams', [],       ...   
@@ -54,7 +58,8 @@ options = struct('combinedParams', [],       ...
                  'order',          'yes',    ...
                  'timeSplits',     [],       ...
                  'timeParameter',  [],       ...
-                 'notToSplit',     []);
+                 'notToSplit',     [],       ...
+                 'scale',          'no');
 
 % read input parameters
 optionNames = fieldnames(options);
@@ -106,41 +111,32 @@ for i=1:length(Xmargs)
         continue
     end
     
-    % regularization
-    if thisLambda ~= 0
-        Xr = [X totalVar * thisLambda * eye(size(X,1))];
-        Xf = [Xmargs{i} zeros(size(X,1))];
-    else
-        Xr = X;
-        Xf = Xmargs{i};
-    end
-    
-    % matlab's recommended way
-    % C = Xf/Xr;
-    % [U,~,~] = svd(C*Xr);
-    % U = U(:,1:nc);
-    
-    % fast dirty way
-    
     % catching possible warning
     s1 = warning('error','MATLAB:singularMatrix');
     s2 = warning('error','MATLAB:nearlySingularMatrix');
     try
-        C = Xf*Xr'/(Xr*Xr');
+        C = Xmargs{i}*X'/(X*X' + (totalVar*thisLambda)^2*eye(size(X,1)));
     catch exception
         display('Matrix close to singular, using tiny regularization, lambda = 1e-10')
         thisLambda = 1e-10;
-        Xr = [X totalVar * thisLambda * eye(size(X,1))];
-        Xf = [Xmargs{i} zeros(size(X,1))];
-        C = Xf*Xr'/(Xr*Xr');
+        C = Xmargs{i}*X'/(X*X' + (totalVar*thisLambda)^2*eye(size(X,1)));
     end
     warning(s1)
     warning(s2)
     
-    M = C*Xr;
+    M = C*X;
     [U,~,~] = eigs(M*M', nc);
     P = U;
     D = U'*C;
+    
+    if strcmp(options.scale, 'yes')
+        for uu = 1:size(D,1)
+            A = Xmargs{i};
+            B = P(:,uu)*D(uu,:)*X;
+            scalingFactor = (A(:)'*B(:))/(B(:)'*B(:));
+            D(uu,:) = scalingFactor * D(uu,:);
+        end
+    end
     
     decoder = [decoder; D];
     encoder = [encoder P];    
