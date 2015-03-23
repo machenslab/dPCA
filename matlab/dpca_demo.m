@@ -90,7 +90,17 @@ margNames = {'Stimulus', 'Decision', 'Condition-independent', 'S/D Interaction'}
 margColours = [23 100 171; 187 20 25; 150 150 150; 114 97 171]/256;
 
 % Time events of interest (e.g. stimulus onset/offset, cues etc.)
+% They are marked on the plots with vertical lines
 timeEvents = [1];
+
+% check consistency between trialNum and firingRates
+for n = 1:size(firingRates,1)
+    for s = 1:size(firingRates,2)
+        for d = 1:size(firingRates,3)
+            assert(isempty(find(isnan(firingRates(n,s,d,:,1:trialNum(n,s,d))), 1)), 'Something is wrong!')
+        end
+    end
+end
 
 %% Step 1: PCA of the dataset
 

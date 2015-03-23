@@ -70,7 +70,7 @@ end
 % setting up the subplot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isempty(time)
-    time = 1:size(data,4);
+    time = 1:size(data, ndims(data));
 end
 axis([time(1) time(end) yspan])
 hold on

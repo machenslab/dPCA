@@ -81,6 +81,8 @@ N = size(X, 1);
 dataDim = size(Xfull);
 Z = Xcen * W;
 
+toDisplayMargNames = 0;
+
 % if there are 4 or less marginalizations, split them into rows
 if ~isempty(options.whichMarg) && ...
    length(unique(options.whichMarg)) <= 4 && length(unique(options.whichMarg)) > 1
@@ -115,12 +117,14 @@ else
         uni = unique(options.whichMarg);
         componentsToPlot = [];
         for u = 1:length(uni)
-            componentsToPlot = [componentsToPlot find(options.whichMarg==uni(u),4)];
+            componentsToPlot = [componentsToPlot find(options.whichMarg==uni(u), 2)];
         end
         componentsToPlot = sort(componentsToPlot);
         if length(componentsToPlot) > 12
             componentsToPlot = componentsToPlot(1:12);
         end
+        
+        toDisplayMargNames = 1;
     end
     subplots = [2 3 4 6 7 8 10 11 12 14 15 16];
     
@@ -201,6 +205,12 @@ for c = 1:length(componentsToPlot)
     else
         set(gca, 'XTickLabel', [])
         set(gca, 'YTickLabel', [])
+    end
+    
+    if toDisplayMargNames && ~isempty(options.marginalizationNames)
+        xx = xlim;
+        yy = ylim;
+        text(xx(1)+(xx(2)-xx(1))*0.1, yy(2)-(yy(2)-yy(1))*0.1, options.marginalizationNames(thisMarg))
     end
 end 
 
@@ -296,6 +306,7 @@ end
 
 % angles and correlations between components
 a = corr(Z(:,1:numCompToShow));
+a = a*0;
 b = V(:,1:numCompToShow)'*V(:,1:numCompToShow);
 
 % display(['Maximal correlation: ' num2str(max(abs(a(a<0.999))))])

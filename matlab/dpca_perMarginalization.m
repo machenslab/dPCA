@@ -17,6 +17,10 @@ function dpca_perMarginalization(Xfull, plotFunction, varargin)
 %                     one could use the following value:
 %                     {{1, [1 3]}, {2, [2 3]}, {3}, {[1 2], [1 2 3]}}.
 %
+% 'timeEvents'      - time-points that should be marked on each subplot
+%  'marginalizationNames'   - names of each marginalization
+%  'time'                   - time axis
+%
 % 'timeSplits'      - an array of K integer numbers specifying time splits
 %                     for time period splitting. All marginalizations will
 %                     be additionally split into K+1 marginalizations,
@@ -35,6 +39,9 @@ function dpca_perMarginalization(Xfull, plotFunction, varargin)
 
 % default input parameters
 options = struct('combinedParams', [],       ...   
+                 'timeEvents',     [],       ...
+                 'time',           [], ...   
+                 'marginalizationNames', [], ...
                  'timeSplits',     [],       ...
                  'timeParameter',  [],       ...
                  'notToSplit',     []);
@@ -69,24 +76,52 @@ totalVar = sum(X(:).^2);
 
 PCs = [];
 vars = [];
+margs = [];
+
+ncompsPerMarg = 3;
 
 for m=1:length(Xmargs)
-    [~,S,V] = svd(Xmargs{m});
-    PCs = [PCs; S(1:10,1:10)*V(:,1:10)'];
-    vars = [vars; diag(S(1:10,1:10)).^2];
+    %[~,S,V] = svd(Xmargs{m});      % this is very slow!
+    
+    %tic
+    XX = Xmargs{m}*Xmargs{m}';
+    [U,S] = eig(XX);
+    S = diag(sqrt(fliplr(diag(S)')));
+    U = fliplr(U);
+    SV = U'*Xmargs{m};
+    %toc
+    
+    %PCs = [PCs; S(1:10,1:10)*V(:,1:10)'];
+    PCs = [PCs; SV(1:ncompsPerMarg,:)];
+    vars = [vars; diag(S(1:ncompsPerMarg,1:ncompsPerMarg)).^2];
+    margs = [margs repmat(m, [1 ncompsPerMarg])];
 end
-[~,ind] = sort(vars,'descend');
+[vars,ind] = sort(vars,'descend');
 PCs = PCs(ind,:);
-PCs = PCs(1:15,:);
-vars = vars(ind) / totalVar * 100;
+margs = margs(ind);
+%PCs = PCs(1:15,:);
+vars = vars / totalVar * 100;
 
 dims = size(Xfull);
-Z = reshape(PCs, [15 dims(2:end)]);
+Z = reshape(PCs, [length(ind) dims(2:end)]);
 
 yspan = max(abs(Z(:)));
 
 figure
-for i=1:15
-    subplot(3,5,i)
-    plotFunction(Z(i,:,:,:), [], [-yspan yspan]*1.1, vars(i), i, [], [], 1)
+N = min(length(Xmargs)*ncompsPerMarg, 35);
+for i=1:N
+    subplot(floor(sqrt(N)),ceil(N/floor(sqrt(N))),i)
+    
+    cln = {i};
+    for j=2:ndims(Z)
+        cln{j} = ':';
+    end
+    
+    plotFunction(Z(cln{:}), options.time, [-yspan yspan]*1.1, vars(i), i, options.timeEvents, [], 1)
+    
+    if ~isempty(options.marginalizationNames)
+        xx = xlim;
+        yy = ylim;
+        text(xx(1)+(xx(2)-xx(1))*0.1, yy(2)-(yy(2)-yy(1))*0.1, options.marginalizationNames(margs(i)))
+    end
 end    
