@@ -80,6 +80,9 @@ XfullCen = bsxfun(@minus, Xfull, mean(X)');
 N = size(X, 1);
 dataDim = size(Xfull);
 Z = Xcen * W;
+%!!
+%Z = bsxfun(@times, Z, 1./std(Z, [], 1));
+%!!
 
 toDisplayMargNames = 0;
 
@@ -99,7 +102,9 @@ if ~isempty(options.whichMarg) && ...
     for i=1:length(margRowSeq)
         if ~isempty(options.componentsSignif) && margRowSeq(i) ~= options.timeMarginalization
             % selecting only significant components
-            moreComponents = find(options.whichMarg == margRowSeq(i) & sum(options.componentsSignif, 2)'~=0, 3);
+            minL = min(length(options.whichMarg), size(options.componentsSignif,1));
+            moreComponents = find(options.whichMarg(1:minL) == margRowSeq(i) & ...
+                sum(options.componentsSignif(1:minL,:), 2)'~=0, 3);
         else
             moreComponents = find(options.whichMarg == margRowSeq(i), 3);
         end
@@ -140,6 +145,9 @@ if ~isempty(options.X_extra)
     XF = options.X_extra(:,:)';
     XFcen = bsxfun(@minus, XF, mean(X));
     ZF = XFcen * W;
+    %!!
+    %ZF = bsxfun(@times, ZF, 1./std(ZF, [], 1));
+    %!!
     dataDimFull = size(options.X_extra);
     Zfull = reshape(ZF(:,componentsToPlot)', [length(componentsToPlot) dataDimFull(2:end)]);
 end
@@ -186,7 +194,8 @@ for c = 1:length(componentsToPlot)
     for i=2:length(dim)
         cln{i} = ':';
     end
-    
+
+    %thisYlim = 5;
     % plot individual components using provided function
     plotFunction(Zfull(cln{:}), options.time, [-thisYlim thisYlim], ...
         thisVar, cc, options.timeEvents, ...
@@ -268,7 +277,7 @@ end
 if ~isempty(options.explainedVar)
     axBar = subplot(4,4,9);
     hold on
-    axis([0 numCompToShow+1 0 10])
+    axis([0 numCompToShow+1 0 12.5])
     ylabel('Component variance (%)')
     b = bar(options.explainedVar.margVar(:,1:numCompToShow)' , 'stacked', 'BarWidth', 0.75);
     
@@ -280,33 +289,38 @@ if ~isempty(options.explainedVar)
     axCum = subplot(4,4,5);
     hold on
 
-    % show signal variance if it's provided
-    if isfield(options.explainedVar, 'cumulativePCA_signal')
-        plot(1:numCompToShow, options.explainedVar.cumulativePCA_signal(1:numCompToShow), ...
-            '.-k', 'LineWidth', 2, 'MarkerSize', 15)
-        plot(1:numCompToShow, options.explainedVar.cumulativeDPCA_signal(1:numCompToShow), ...
-            '.-r', 'LineWidth', 2, 'MarkerSize', 15)
-        yy = [options.explainedVar.cumulativePCA_signal(1:numCompToShow) ...
-              options.explainedVar.cumulativeDPCA_signal(1:numCompToShow)];
-        ylabel({'Cumulative explained', 'signal variance (%)'})
-    else
-        plot(1:numCompToShow, options.explainedVar.cumulativePCA(1:numCompToShow), ...
-            '.-k', 'LineWidth', 2, 'MarkerSize', 15);
-        plot(1:numCompToShow, options.explainedVar.cumulativeDPCA(1:numCompToShow), ...
-            '.-r', 'LineWidth', 2, 'MarkerSize', 15);
-        yy = [options.explainedVar.cumulativePCA(1:numCompToShow) ...
-              options.explainedVar.cumulativeDPCA(1:numCompToShow)];
-        ylabel({'Cumulative explained', 'variance (%)'})
+%     % show signal variance if it's provided
+%     if isfield(options.explainedVar, 'cumulativePCA_signal')
+%         plot(1:numCompToShow, options.explainedVar.cumulativePCA_signal(1:numCompToShow), ...
+%             '--k', 'LineWidth', 1)
+%         plot(1:numCompToShow, options.explainedVar.cumulativeDPCA_signal(1:numCompToShow), ...
+%             '--r', 'LineWidth', 1)
+%         yy = [options.explainedVar.cumulativePCA_signal(1:numCompToShow) ...
+%               options.explainedVar.cumulativeDPCA_signal(1:numCompToShow)];
+%     end
+    
+    plot(1:numCompToShow, options.explainedVar.cumulativePCA(1:numCompToShow), ...
+        '.-k', 'LineWidth', 1, 'MarkerSize', 15);
+    plot(1:numCompToShow, options.explainedVar.cumulativeDPCA(1:numCompToShow), ...
+        '.-r', 'LineWidth', 1, 'MarkerSize', 15);
+    %yy = [options.explainedVar.cumulativePCA(1:numCompToShow) ...
+    %    options.explainedVar.cumulativeDPCA(1:numCompToShow)];
+    ylabel({'Explained variance (%)'})
+        
+    if isfield(options.explainedVar, 'totalVar_signal')
+        plot([0 numCompToShow+1], options.explainedVar.totalVar_signal/options.explainedVar.totalVar*100*[1 1], 'k--')
     end
            
-    axis([0 numCompToShow+1 floor(min(yy-5)/10)*10 min(ceil(max(yy+5)/10)*10, 100)])
+    %axis([0 numCompToShow+1 floor(min(yy-5)/10)*10 min(ceil(max(yy+5)/10)*10, 100)])
+    axis([0 numCompToShow+1 0 100])
     xlabel('Component')
     legend({'PCA', 'dPCA'}, 'Location', 'SouthEast');
+    legend boxoff
 end
 
 % angles and correlations between components
 a = corr(Z(:,1:numCompToShow));
-a = a*0;
+%a = a*0;
 b = V(:,1:numCompToShow)'*V(:,1:numCompToShow);
 
 % display(['Maximal correlation: ' num2str(max(abs(a(a<0.999))))])
@@ -396,7 +410,7 @@ end
 if ~isempty(options.explainedVar)
     axes('position', [0.205 0.47 0.1 0.1])
     
-    if isfield(options.explainedVar, 'cumulativePCA_signal')
+    if isfield(options.explainedVar, 'totalMarginalizedVar_signal')
         d = options.explainedVar.totalMarginalizedVar_signal / options.explainedVar.totalVar_signal * 100;
        
         % In some rare cases the *signal* explained variances can be

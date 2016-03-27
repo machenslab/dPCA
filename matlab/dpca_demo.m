@@ -106,7 +106,7 @@ end
 
 X = firingRatesAverage(:,:);
 X = bsxfun(@minus, X, mean(X,2));
-[W,~,~] = svd(X);
+[W,~,~] = svd(X, 'econ');
 
 % minimal plotting
 dpca_plot(firingRatesAverage, W, W, @dpca_plot_default);
@@ -164,9 +164,13 @@ optimalLambda = dpca_optimizeLambda(firingRatesAverage, firingRates, trialNum, .
     'numRep', 5, ...  % increase this number to ~10 for better accuracy
     'filename', 'tmp_optimalLambdas.mat');
 
+[~,~,Cnoise] = dpca_getNoiseCovariance(firingRatesAverage, ...
+    firingRates, trialNum);
+
 [W,V,whichMarg] = dpca(firingRatesAverage, 20, ...
     'combinedParams', combinedParams, ...
-    'lambda', optimalLambda);
+    'lambda', optimalLambda, ...
+    'Cnoise', Cnoise);
 
 explVar = dpca_explainedVariance(firingRatesAverage, W, V, ...
     'combinedParams', combinedParams);
@@ -181,7 +185,26 @@ dpca_plot(firingRatesAverage, W, V, @dpca_plot_default, ...
     'timeMarginalization', 3,           ...
     'legendSubplot', 16);
 
-%% Decoding
+
+%% Optional: estimating "signal variance"
+
+explVar = dpca_explainedVariance(firingRatesAverage, W, V, ...
+    'combinedParams', combinedParams, ...
+    'Cnoise', Cnoise, 'numOfTrials', trialNum);
+
+% note how the pie chart changes relative to the previous figure
+
+dpca_plot(firingRatesAverage, W, V, @dpca_plot_default, ...
+    'explainedVar', explVar, ...
+    'marginalizationNames', margNames, ...
+    'marginalizationColours', margColours, ...
+    'whichMarg', whichMarg,                 ...
+    'time', time,                        ...
+    'timeEvents', timeEvents,               ...
+    'timeMarginalization', 3,           ...
+    'legendSubplot', 16);
+
+%% Optional: decoding
 
 decodingClasses = {[(1:S)' (1:S)'], repmat([1:2], [S 1]), [], [(1:S)' (S+(1:S))']};
 
@@ -199,6 +222,9 @@ accuracyShuffle = dpca_classificationShuffled(firingRates, trialNum, ...
     'numRep', 5, ...        % increase to 100
     'numShuffles', 20, ...  % increase to 100 (takes a lot of time)
     'filename', 'tmp_classification_accuracy.mat');
+
+% now you can rerun the previous line (dpca_classificationAccuracy call) to
+% generate the figure again, this time with the shuffle intervals
 
 componentsSignif = dpca_signifComponents(accuracy, accuracyShuffle, whichMarg);
 

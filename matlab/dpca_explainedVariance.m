@@ -29,6 +29,7 @@ function explVar = dpca_explainedVariance(Xfull, W, V, varargin)
 %                     provided, "signal variance" will be computed:
 %
 %  * explVar.totalVar_signal             - total signal variance
+%  * explVar.totalVar_noise              - total residual noise variance
 %  * explVar.totalMarginalizedVar_signal - total signal variance in each marginalization
 %  * explVar.cumulativePCA_signal        - cumulative signal variance of the PCA components (%)
 %  * explVar.cumulativeDPCA_signal       - cumulative signal variance of the dPCA components (%)
@@ -38,12 +39,18 @@ function explVar = dpca_explainedVariance(Xfull, W, V, varargin)
 %                     combination of parameters (without time) specifies
 %                     the number of available trials in X_trial. All
 %                     entries have to be larger than 1.
+%
+% 'Cnoise'          - Cnoise matrix, as obtained by
+%                     dpca_getNoiseCovariance(). Can be provided INSTEAD of
+%                     X_trial to compute the noise estimate via the new
+%                     method. numOfTrials still needed.
 
 
 % default input parameters
 options = struct('combinedParams', [], ...   
                  'X_trial',        [], ...
-                 'numOfTrials',    []);
+                 'numOfTrials',    [], ...
+                 'Cnoise',         []);
 
 % read input parameters
 optionNames = fieldnames(options);
@@ -74,14 +81,16 @@ for i=1:length(Xmargs)
     explVar.totalMarginalizedVar(i) = sum(Xmargs{i}(:).^2);
 end
 
-% variance of each component
-for i=1:length(Xmargs)
-    explVar.margVar(i,:) = sum((W' * Xmargs{i}).^2, 2)' / explVar.totalVar * 100;
-end
-explVar.componentVar = sum(explVar.margVar);
+% variance of each component ("captured variance"! not the same as 
+% "explained variance". Deprecated and not used anymore.)
+
+% for i=1:length(Xmargs)
+%     explVar.margVar(i,:) = sum((W' * Xmargs{i}).^2, 2)' / explVar.totalVar * 100;
+% end
+% explVar.componentVar = sum(explVar.margVar);
 
 % PCA explained variance
-[~,S,Wpca] = svd(X');
+[~,S,Wpca] = svd(X', 'econ');
 S = diag(S);
 S = S(1:size(W,2));
 explVar.cumulativePCA = cumsum(S.^2'/ explVar.totalVar * 100);
@@ -90,9 +99,15 @@ explVar.cumulativePCA = cumsum(S.^2'/ explVar.totalVar * 100);
 Z = W'*X;
 for i=1:size(W,2)
     explVar.cumulativeDPCA(i) = 100 - sum(sum((X - V(:,1:i)*Z(1:i,:)).^2)) / explVar.totalVar * 100;    
+    explVar.componentVar(i) = 100 - sum(sum((X - V(:,i)*Z(i,:)).^2)) / explVar.totalVar * 100;    
+   
+    for j=1:length(Xmargs)
+        ZZ = Xmargs{j} - V(:,i)*(W(:,i)'*Xmargs{j});
+        explVar.margVar(j,i) = (explVar.totalMarginalizedVar(j) - sum(ZZ(:).^2)) / explVar.totalVar * 100;    
+    end
 end
 
-% OPTIONAL part
+% OPTIONAL part : OLD APPROACH
 if ~isempty(options.X_trial) && ~isempty(options.numOfTrials)
     
     % subtract two trials in each condition to get a sample of noise data
@@ -128,10 +143,10 @@ if ~isempty(options.X_trial) && ~isempty(options.numOfTrials)
     XmargsNoise = dpca_marginalize(XnoiseFull, 'combinedParams', options.combinedParams);
 
     % total noise variance
-    totalVarNoise = sum(sum(Xnoise.^2));
+    explVar.totalVar_noise = sum(sum(Xnoise.^2));
     
     % total signal variance
-    explVar.totalVar_signal = explVar.totalVar - totalVarNoise;
+    explVar.totalVar_signal = explVar.totalVar - explVar.totalVar_noise;
     
     % total marginalized signal variance
     for i=1:length(Xmargs)
@@ -139,17 +154,35 @@ if ~isempty(options.X_trial) && ~isempty(options.numOfTrials)
     end
     explVar.totalMarginalizedVar_signal = explVar.totalMarginalizedVar - marginalizedVarNoise;
     
-    % PCA explained SIGNAL variance
-    [~,Snoise,~] = svd(Xnoise');
-    Snoise = diag(Snoise);
-    Snoise = Snoise(1:size(W,2));
-    pcaSignal = S.^2 - Snoise.^2;
-    explVar.cumulativePCA_signal = cumsum(pcaSignal' / explVar.totalVar_signal * 100);
+%     % PCA explained SIGNAL variance
+%     [~,Snoise,~] = svd(Xnoise');
+%     Snoise = diag(Snoise);
+%     Snoise = Snoise(1:size(W,2));
+%     pcaSignal = S.^2 - Snoise.^2;
+%     explVar.cumulativePCA_signal = cumsum(pcaSignal' / explVar.totalVar_signal * 100);
+%     
+%     % dPCA explained SIGNAL variance
+%     Z = W'*X;
+%     for i=1:size(W,2)
+%         dpcaVar(i) = explVar.totalVar - sum(sum((X - V(:,1:i)*Z(1:i,:)).^2)) - sum(Snoise(1:i).^2);
+%     end
+%     explVar.cumulativeDPCA_signal = dpcaVar / explVar.totalVar_signal * 100;
+end
+
+% OPTIONAL part : NEW APPROACH
+if ~isempty(options.Cnoise) && ~isempty(options.numOfTrials)
+    Ktilde = mean(reshape(options.numOfTrials, size(options.numOfTrials,1),[]),2);
+    explVar.totalVar_noise = sum(diag(options.Cnoise)./Ktilde);
+    explVar.totalVar_signal = explVar.totalVar - explVar.totalVar_noise;
     
-    % dPCA explained SIGNAL variance
-    Z = W'*X;
-    for i=1:size(W,2)
-        dpcaVar(i) = explVar.totalVar - sum(sum((X - V(:,1:i)*Z(1:i,:)).^2)) - sum(Snoise(1:i).^2);
-    end
-    explVar.cumulativeDPCA_signal = dpcaVar / explVar.totalVar_signal * 100;
+    % dirty hack!! do it properly later!
+    S = size(Xfull,2);
+    Q = size(Xfull,3);
+    T = size(Xfull,4);
+    explVar.totalMarginalizedVar_signal = explVar.totalMarginalizedVar - ...
+        [(S*T-T) (Q*T-T) (T-1) S*Q*T-S*T-Q*T+T]/(S*Q*T-1) * explVar.totalVar_noise;
+
+    % X = randn(1000,S,Q,T);
+    % Xmarg = dpca_marginalize(X, 'combinedParams', combinedParams);
+    % [sum(Xmarg{1}(:).^2) sum(Xmarg{2}(:).^2) sum(Xmarg{3}(:).^2) sum(Xmarg{4}(:).^2)]/sum(X(:).^2)
 end

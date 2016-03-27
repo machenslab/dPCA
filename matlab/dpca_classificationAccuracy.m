@@ -100,6 +100,7 @@ for pair = reshape(varargin,2,[])    % pair is {propName; propValue}
 end
 
 Xsum = bsxfun(@times, Xfull, numOfTrials);
+[X2sum,~,Cnoise] = dpca_getNoiseCovariance(Xfull, Xtrial, numOfTrials);
 
 % find time marginalization
 timeComp = [];
@@ -152,7 +153,8 @@ end
     'timeSplits', options.timeSplits, ...
     'timeParameter', options.timeParameter, ...
     'notToSplit', options.notToSplit, ...
-    'order', 'no');
+    'order', 'no', ...
+    'Cnoise', Cnoise);
 
 for rep = 1:options.numRep
     if strcmp(options.verbose, 'yes')
@@ -163,14 +165,20 @@ for rep = 1:options.numRep
     
     Xtest = dpca_getTestTrials(Xtrial, numOfTrials);
     Xtrain = bsxfun(@times, Xsum - Xtest, 1./(numOfTrials-1));
-    
+
+    ssTrain = X2sum + bsxfun(@times, Xfull.^2, numOfTrials) ...
+        - Xtest.^2 - bsxfun(@times, Xtrain.^2, (numOfTrials-1));
+    SSnoiseSumOverT = sum(ssTrain, ndims(ssTrain));
+    CnoiseTrain = diag(sum(bsxfun(@times, SSnoiseSumOverT(:,:), 1./(numOfTrials(:,:)-1)),2));
+
     [W,V,whichMarg] = dpca(Xtrain, numCompsToUse, ...
          'combinedParams', options.combinedParams, ...
          'lambda', options.lambda, ...
          'timeSplits', options.timeSplits, ...
          'timeParameter', options.timeParameter, ...
          'notToSplit', options.notToSplit, ...
-         'order', 'no');
+         'order', 'no', ...
+         'Cnoise', CnoiseTrain);
      
     % for debugging
     % dpca_plot(Xtrain, W, V, @dpca_plot_default, 'whichMarg', whichMarg);

@@ -51,6 +51,9 @@ function [W, V, whichMarg] = dpca(Xfull, numComps, varargin)
 % 'scale'           - if 'yes', decoder of each component will be scaled to
 %                     have an optimal length (leading to the minimal
 %                     reconstruction error). Default is 'no'.
+%
+% 'Cnoise'          - if provided, will be used in a cost function to
+%                     penalize captured noise variance
 
 % default input parameters
 options = struct('combinedParams', [],       ...   
@@ -59,7 +62,8 @@ options = struct('combinedParams', [],       ...
                  'timeSplits',     [],       ...
                  'timeParameter',  [],       ...
                  'notToSplit',     [],       ...
-                 'scale',          'no');
+                 'scale',          'no',     ...
+                 'Cnoise',         []);
 
 % read input parameters
 optionNames = fieldnames(options);
@@ -89,9 +93,15 @@ totalVar = sum(X(:).^2);
                     'notToSplit', options.notToSplit, ...
                     'ifFlat', 'yes');
 
+% initialize
 decoder = [];
 encoder = [];
 whichMarg = [];
+
+% noise covariance
+if isempty(options.Cnoise)
+    options.Cnoise = zeros(size(X,1));
+end
 
 % loop over marginalizations
 for i=1:length(Xmargs)
@@ -115,11 +125,11 @@ for i=1:length(Xmargs)
     s1 = warning('error','MATLAB:singularMatrix');
     s2 = warning('error','MATLAB:nearlySingularMatrix');
     try
-        C = Xmargs{i}*X'/(X*X' + (totalVar*thisLambda)^2*eye(size(X,1)));
+        C = Xmargs{i}*X'/(X*X' + options.Cnoise + (totalVar*thisLambda)^2*eye(size(X,1)));
     catch exception
         display('Matrix close to singular, using tiny regularization, lambda = 1e-10')
         thisLambda = 1e-10;
-        C = Xmargs{i}*X'/(X*X' + (totalVar*thisLambda)^2*eye(size(X,1)));
+        C = Xmargs{i}*X'/(X*X' + options.Cnoise + (totalVar*thisLambda)^2*eye(size(X,1)));
     end
     warning(s1)
     warning(s2)
@@ -179,8 +189,18 @@ end
 
 % ordering components by explained variance (or not)
 if length(numComps) == 1 || strcmp(options.order, 'yes')
-    Z = W'*X;
-    explVar = sum(Z.^2,2);
+    
+    % The next two lines would order the components based on the "captured"
+    % variance, not "explained" variance. We used to do it in earlier
+    % drafts, but switched to the explained variance in the final version.
+    
+%     Z = W'*X;
+%     explVar = sum(Z.^2,2);
+
+    for i=1:size(W,2)
+        Z = X - V(:,i)*(W(:,i)'*X);
+        explVar(i) = 1 - sum(Z(:).^2)/totalVar;
+    end
     [~ , order] = sort(explVar, 'descend');
     
     if length(numComps) == 1

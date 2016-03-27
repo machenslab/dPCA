@@ -82,7 +82,7 @@ else
 end
 
 if ~isempty(events)
-    plot([events', events'], yspan, 'Color', [0.6 0.6 0.6])
+    plot([events; events], yspan, 'Color', [0.6 0.6 0.6])
 end
 
 if ~isempty(signif)
@@ -118,7 +118,7 @@ else
     % colours
     data = squeeze(data);
     dims = size(data);
-    data = permute(data, [dims(end) dims(1:end-1)]);
+    data = permute(data, [numel(dims) 1:numel(dims)-1]);
     data = reshape(data, size(data,1), []);
     data = data';
     

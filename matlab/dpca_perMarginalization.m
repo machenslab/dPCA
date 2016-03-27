@@ -82,6 +82,7 @@ ncompsPerMarg = 3;
 
 for m=1:length(Xmargs)
     %[~,S,V] = svd(Xmargs{m});      % this is very slow!
+    margVar(m) = sum(Xmargs{m}(:).^2)/totalVar*100;
     
     %tic
     XX = Xmargs{m}*Xmargs{m}';
@@ -122,6 +123,7 @@ for i=1:N
     if ~isempty(options.marginalizationNames)
         xx = xlim;
         yy = ylim;
-        text(xx(1)+(xx(2)-xx(1))*0.1, yy(2)-(yy(2)-yy(1))*0.1, options.marginalizationNames(margs(i)))
+        text(xx(1)+(xx(2)-xx(1))*0.1, yy(2)-(yy(2)-yy(1))*0.1, ...
+            [options.marginalizationNames{margs(i)} ' (' num2str(margVar(margs(i)),2) '%)'])
     end
 end    

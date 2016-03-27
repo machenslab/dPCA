@@ -80,11 +80,18 @@ tic
 Xsum = bsxfun(@times, Xfull, numOfTrials);
 %Xsum = nansum(Xtrial,5);
 
+X2sum = dpca_getNoiseCovariance(Xfull, Xtrial, numOfTrials);
+
 for rep = 1:options.numRep
     fprintf(['Repetition #' num2str(rep) ' out of ' num2str(options.numRep)])
     
     Xtest = dpca_getTestTrials(Xtrial, numOfTrials);
     Xtrain = bsxfun(@times, Xsum - Xtest, 1./(numOfTrials-1));
+    
+    ssTrain = X2sum + bsxfun(@times, Xfull.^2, numOfTrials) ...
+        - Xtest.^2 - bsxfun(@times, Xtrain.^2, (numOfTrials-1));
+    SSnoiseSumOverT = sum(ssTrain, ndims(ssTrain));
+    CnoiseTrain = diag(sum(bsxfun(@times, SSnoiseSumOverT(:,:), 1./(numOfTrials(:,:)-1)),2));
     
     XtestCen = bsxfun(@minus, Xtest, mean(Xtest(:,:),2));
     XtestMargs = dpca_marginalize(XtestCen, 'combinedParams', options.combinedParams, ...
@@ -111,7 +118,7 @@ for rep = 1:options.numRep
         
         [W,V,whichMarg] = dpca(Xtrain, options.numComps, ...
             'combinedParams', options.combinedParams, ...
-            'lambda', options.lambdas(l));
+            'lambda', options.lambdas(l), 'Cnoise', CnoiseTrain);
                         
         cumError = 0;
         for i=1:length(XtestMargs)
