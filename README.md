@@ -19,6 +19,13 @@ Simple example code for surrogate data can be found in [**dpca_demo.ipynb**](htt
 
 To install, first make sure that numpy, cython, scipy, sklearn, itertools and numexpr are avaible. Then copy the files from the Python subfolder to a location in the Python search path.
 
+Alternatively, from the terminal you can install the package by running:
+
+```
+$  cd /path/to/dPCA/python
+$  python setup.py install
+```
+
 API of dPCA is similar to sklearn. To use dPCA, you should first import dPCA,  
 `from dpca import dPCA`  
 then initialize it,    

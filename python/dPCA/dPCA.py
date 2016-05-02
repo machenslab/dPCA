@@ -69,9 +69,8 @@ class dPCA(BaseEstimator):
 
     Attributes
     ----------
-    components_ : dictionary
-        Components with maximum variance for each marginalization. Keys refer to marginalization,
-        the values are arrays of type [n_components_in_marginalization, n_features].
+    components_ : array, [n_components, n_features]
+        Components with maximum variance.
 
     explained_variance_ratio_ : array, [n_components]
         Percentage of variance explained by each of the selected components. \
@@ -452,7 +451,19 @@ class dPCA(BaseEstimator):
         return error if not mean else np.sum(error.values())
 
     def _randomized_dpca(self,X,mXs,pinvX=None):
-        """ Solves the dPCA minimization problem analytically by using a randomized SVD solver from sklearn. """
+        """ Solves the dPCA minimization problem analytically by using a randomized SVD solver from sklearn.
+
+            Returns
+            -------
+            P : dict mapping strings to array-like,
+                Holds encoding matrices for each term in variance decompostions (used to transform data
+                to low-dimensional space).
+
+            D : dict mapping strings to array-like,
+                Holds decoding matrices for each term in variance decompostions (used in inverse_transform
+                to map from low-dimensional representation back to original data space).
+
+        """
 
         n_features = X.shape[0]
         rX = X.reshape((n_features,-1))
@@ -461,7 +472,7 @@ class dPCA(BaseEstimator):
         P, D = {}, {}
 
         for key in mXs.keys():
-            mX = mXs[key].reshape((n_features,-1))
+            mX = mXs[key].reshape((n_features,-1)) # called X_phi in paper
             C = np.dot(mX,pinvX)
 
             if isinstance(self.n_components,dict):
@@ -565,8 +576,7 @@ class dPCA(BaseEstimator):
             regX, regmXs, pregX = X, mXs, pinv(X.reshape((n_features,-1)))
 
         # compute closed-form solution
-        self.P, self.D    = self._randomized_dpca(regX,regmXs,pinvX=pregX)
-        self.components_  = self.D
+        self.P, self.D = self._randomized_dpca(regX,regmXs,pinvX=pregX)
 
     def _zero_mean(self,X):
         """ Subtracts the mean from each observable """
