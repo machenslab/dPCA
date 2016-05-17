@@ -5,8 +5,8 @@ dPCA is a linear dimensionality reduction technique that automatically discovers
 
 > D Kobak<sup>+</sup>, W Brendel<sup>+</sup>, C Constantinidis, CE Feierstein,
 A Kepecs, ZF Mainen, X-L Qi, R Romo, N Uchida, CK Machens<br>
-> Demixed principal component analysis of neural population data*<br>
-> eLife 2016, https://elifesciences.org/content/5/e10989
+> **Demixed principal component analysis of neural population data**<br>
+> eLife 2016, https://elifesciences.org/content/5/e10989<br>
 > (arXiv link: http://arxiv.org/abs/1410.6031)
 
 This repository provides easy to use Python and MATLAB implementations of dPCA as well as example code.
