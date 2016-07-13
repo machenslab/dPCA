@@ -31,11 +31,11 @@
 
 clear all
 
-N = 100;    % number of neurons
-T = 20;     % number of time points
-S = 7;      % number of stimuli
+N = 100;%100;    % number of neurons
+T = 20;%20;     % number of time points
+S = 7;%7;      % number of stimuli
 D = 2;      % number of decisions
-E = 20;     % maximal number of trial repetitions
+E = 20;%20;     % maximal number of trial repetitions
 
 % generating three components
 time = (1:T) / 10;
@@ -53,6 +53,7 @@ for c = 1:length(component)
     components(:,c) = component{c}(:,:);
 end
 firingRates = V*components';
+clear component components 
 
 % adding noise and normalizing
 firingRates = firingRates + randn(size(firingRates));
@@ -60,7 +61,15 @@ firingRates = firingRates - min(firingRates(:)) + 10;
 firingRates = reshape(firingRates, [N S D T E]);
 
 % setting random number of repetitions for each neuron and condition
-trialNum = randi([5 E], [N S D]);
+ifSimultaneousRecording = false;  % change this to simulate simultaneous 
+                                 % recordings (they imply the same number 
+                                 % of trials for each neuron)
+if ~ifSimultaneousRecording
+    trialNum = randi([5 E], [N S D]);
+else
+    trialNum = repmat(randi([5 E], [1 S D]), [N 1 1]);
+end
+
 for n = 1:N
     for s = 1:S
         for d = 1:D
@@ -91,7 +100,7 @@ margColours = [23 100 171; 187 20 25; 150 150 150; 114 97 171]/256;
 
 % Time events of interest (e.g. stimulus onset/offset, cues etc.)
 % They are marked on the plots with vertical lines
-timeEvents = [1];
+timeEvents = time(round(length(time)/2));
 
 % check consistency between trialNum and firingRates
 for n = 1:size(firingRates,1)
@@ -106,7 +115,9 @@ end
 
 X = firingRatesAverage(:,:);
 X = bsxfun(@minus, X, mean(X,2));
+
 [W,~,~] = svd(X, 'econ');
+W = W(:,1:20);
 
 % minimal plotting
 dpca_plot(firingRatesAverage, W, W, @dpca_plot_default);
@@ -118,6 +129,8 @@ explVar = dpca_explainedVariance(firingRatesAverage, W, W, ...
 % a bit more informative plotting
 dpca_plot(firingRatesAverage, W, W, @dpca_plot_default, ...
     'explainedVar', explVar, ...
+    'time', time,                        ...
+    'timeEvents', timeEvents,               ...
     'marginalizationNames', margNames, ...
     'marginalizationColours', margColours);
 
@@ -127,7 +140,6 @@ dpca_plot(firingRatesAverage, W, W, @dpca_plot_default, ...
 dpca_perMarginalization(firingRatesAverage, @dpca_plot_default, ...
    'combinedParams', combinedParams);
 
-
 %% Step 3: dPCA without regularization
 
 % This is the core function.
@@ -135,8 +147,10 @@ dpca_perMarginalization(firingRatesAverage, @dpca_plot_default, ...
 % whichMarg is an array that tells you which component comes from which
 % marginalization
 
+tic
 [W,V,whichMarg] = dpca(firingRatesAverage, 20, ...
     'combinedParams', combinedParams);
+toc
 
 explVar = dpca_explainedVariance(firingRatesAverage, W, V, ...
     'combinedParams', combinedParams);
@@ -161,11 +175,12 @@ dpca_plot(firingRatesAverage, W, V, @dpca_plot_default, ...
 
 optimalLambda = dpca_optimizeLambda(firingRatesAverage, firingRates, trialNum, ...
     'combinedParams', combinedParams, ...
-    'numRep', 5, ...  % increase this number to ~10 for better accuracy
+    'simultaneous', ifSimultaneousRecording, ...
+    'numRep', 2, ...  % increase this number to ~10 for better accuracy
     'filename', 'tmp_optimalLambdas.mat');
 
-[~,~,Cnoise] = dpca_getNoiseCovariance(firingRatesAverage, ...
-    firingRates, trialNum);
+Cnoise = dpca_getNoiseCovariance(firingRatesAverage, ...
+    firingRates, trialNum, 'simultaneous', ifSimultaneousRecording);
 
 [W,V,whichMarg] = dpca(firingRatesAverage, 20, ...
     'combinedParams', combinedParams, ...
@@ -185,14 +200,15 @@ dpca_plot(firingRatesAverage, W, V, @dpca_plot_default, ...
     'timeMarginalization', 3,           ...
     'legendSubplot', 16);
 
-
 %% Optional: estimating "signal variance"
 
 explVar = dpca_explainedVariance(firingRatesAverage, W, V, ...
     'combinedParams', combinedParams, ...
     'Cnoise', Cnoise, 'numOfTrials', trialNum);
 
-% note how the pie chart changes relative to the previous figure
+% Note how the pie chart changes relative to the previous figure.
+% That is because it is displaying percentages of (estimated) signal PSTH
+% variances, not total PSTH variances. See paper for more details.
 
 dpca_plot(firingRatesAverage, W, V, @dpca_plot_default, ...
     'explainedVar', explVar, ...
@@ -212,19 +228,22 @@ accuracy = dpca_classificationAccuracy(firingRatesAverage, firingRates, trialNum
     'lambda', optimalLambda, ...
     'combinedParams', combinedParams, ...
     'decodingClasses', decodingClasses, ...
+    'simultaneous', ifSimultaneousRecording, ...
     'numRep', 5, ...        % increase to 100
     'filename', 'tmp_classification_accuracy.mat');
+
+dpca_classificationPlot(accuracy, [], [], [], decodingClasses)
 
 accuracyShuffle = dpca_classificationShuffled(firingRates, trialNum, ...
     'lambda', optimalLambda, ...
     'combinedParams', combinedParams, ...
     'decodingClasses', decodingClasses, ...
+    'simultaneous', ifSimultaneousRecording, ...
     'numRep', 5, ...        % increase to 100
     'numShuffles', 20, ...  % increase to 100 (takes a lot of time)
     'filename', 'tmp_classification_accuracy.mat');
 
-% now you can rerun the previous line (dpca_classificationAccuracy call) to
-% generate the figure again, this time with the shuffle intervals
+dpca_classificationPlot(accuracy, [], accuracyShuffle, [], decodingClasses)
 
 componentsSignif = dpca_signifComponents(accuracy, accuracyShuffle, whichMarg);
 

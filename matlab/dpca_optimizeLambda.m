@@ -53,6 +53,13 @@ function [optimalLambda, optimalLambdas] = dpca_optimizeLambda(Xfull, ...
 %                                       data (DEFAULT)
 %                        'neuronwise' - reconstruction error on the test
 %                                       data computed per neuron
+%
+% 'simultaneous'    - if the dataset is simultaneously recorded (true) or
+%                     not (false - DEFAULT)
+%
+% 'noiseCovType'    - two possible ways to compute noise covariance matrix:
+%                        'averaged'   - average over conditions
+%                        'pooled'     - pooled over conditions (DEFAULT)
 
 % default input parameters
 options = struct('numComps',       25,                  ...   
@@ -61,7 +68,9 @@ options = struct('numComps',       25,                  ...
                  'display',        'yes',               ...
                  'combinedParams', [],                  ...
                  'filename',       [],                  ...
-                 'method',         'training');
+                 'method',         'training',          ...
+                 'simultaneous',   false,               ...
+                 'noiseCovType',   'pooled');
 
 % read input parameters
 optionNames = fieldnames(options);
@@ -76,22 +85,43 @@ for pair = reshape(varargin,2,[])    % pair is {propName; propValue}
 	end
 end
 
+if min(numOfTrials) <= 0
+    error('dPCA:tooFewTrials0','Some neurons seem to have no trials in some condition(s).\nPlease ensure that min(numOfTrials) > 0.')
+elseif min(numOfTrials) == 1
+    error('dPCA:tooFewTrials1','Cannot perform cross-validation when there are neurons \nhaving only one trial per some condition(s). \nPlease ensure that min(numOfTrials) > 1.')
+end
+
 tic
 Xsum = bsxfun(@times, Xfull, numOfTrials);
-%Xsum = nansum(Xtrial,5);
+% Xsum = nansum(Xtrial,5);      % the previous line is equivalent but faster
 
-X2sum = dpca_getNoiseCovariance(Xfull, Xtrial, numOfTrials);
+% Note (12 Jul 2016): the function was updating the noise cov for the training
+% data without recomputing it. It's tricky to implement for simultaneous
+% recordings, so I am dropping this for now, and switching to the easier
+% but slower version. (The same goes for decoding functions.)
+% X2sum = nansum(Xtrial.^2, ndims(Xtrial)) - bsxfun(@times, Xfull.^2, numOfTrials);
 
 for rep = 1:options.numRep
-    fprintf(['Repetition #' num2str(rep) ' out of ' num2str(options.numRep)])
+    fprintf(['Iteration #' num2str(rep) ' out of ' num2str(options.numRep)])
+    repTic = tic;
     
-    Xtest = dpca_getTestTrials(Xtrial, numOfTrials);
+    [Xtest, XtrainFull] = dpca_getTestTrials(Xtrial, numOfTrials, ...
+        'simultaneous', options.simultaneous);
     Xtrain = bsxfun(@times, Xsum - Xtest, 1./(numOfTrials-1));
+    % This gives the same result as the previous line, but is much slower
+    % Xtrain = nanmean(XtrainFull, ndims(XtrainFull));
     
-    ssTrain = X2sum + bsxfun(@times, Xfull.^2, numOfTrials) ...
-        - Xtest.^2 - bsxfun(@times, Xtrain.^2, (numOfTrials-1));
-    SSnoiseSumOverT = sum(ssTrain, ndims(ssTrain));
-    CnoiseTrain = diag(sum(bsxfun(@times, SSnoiseSumOverT(:,:), 1./(numOfTrials(:,:)-1)),2));
+    % Note (12 Jul 2016): the function was updating the noise cov for the training
+    % data without recomputing it. It's tricky to implement for simultaneous
+    % recordings, so I am dropping this for now, and switching to the easier
+    % but slower version.
+%     ssTrain = X2sum + bsxfun(@times, Xfull.^2, numOfTrials) ...
+%         - Xtest.^2 - bsxfun(@times, Xtrain.^2, (numOfTrials-1));
+%     SSnoiseSumOverT = sum(ssTrain, ndims(ssTrain));
+%     CnoiseTrain = diag(sum(bsxfun(@times, SSnoiseSumOverT(:,:), 1./(numOfTrials(:,:)-1)),2));
+    
+    CnoiseTrain = dpca_getNoiseCovariance(Xtrain, XtrainFull, numOfTrials-1, ...
+        'simultaneous', options.simultaneous, 'type', options.noiseCovType);
     
     XtestCen = bsxfun(@minus, Xtest, mean(Xtest(:,:),2));
     XtestMargs = dpca_marginalize(XtestCen, 'combinedParams', options.combinedParams, ...
@@ -152,6 +182,8 @@ for rep = 1:options.numRep
         errors(l,rep) = cumError / sum(margVar_toNormalize);
     end
         
+    repTime = toc(repTic);
+    fprintf([' [' num2str(round(repTime)) ' s]'])
     fprintf('\n')
 end
 

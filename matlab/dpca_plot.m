@@ -301,8 +301,10 @@ if ~isempty(options.explainedVar)
     
     plot(1:numCompToShow, options.explainedVar.cumulativePCA(1:numCompToShow), ...
         '.-k', 'LineWidth', 1, 'MarkerSize', 15);
-    plot(1:numCompToShow, options.explainedVar.cumulativeDPCA(1:numCompToShow), ...
-        '.-r', 'LineWidth', 1, 'MarkerSize', 15);
+    if ~isempty(options.explainedVar.cumulativeDPCA)
+        plot(1:numCompToShow, options.explainedVar.cumulativeDPCA(1:numCompToShow), ...
+             '.-r', 'LineWidth', 1, 'MarkerSize', 15);
+    end
     %yy = [options.explainedVar.cumulativePCA(1:numCompToShow) ...
     %    options.explainedVar.cumulativeDPCA(1:numCompToShow)];
     ylabel({'Explained variance (%)'})
@@ -314,7 +316,11 @@ if ~isempty(options.explainedVar)
     %axis([0 numCompToShow+1 floor(min(yy-5)/10)*10 min(ceil(max(yy+5)/10)*10, 100)])
     axis([0 numCompToShow+1 0 100])
     xlabel('Component')
-    legend({'PCA', 'dPCA'}, 'Location', 'SouthEast');
+    if ~isempty(options.explainedVar.cumulativeDPCA)
+        legend({'PCA', 'dPCA'}, 'Location', 'SouthEast');
+    else
+        legend({'PCA'}, 'Location', 'SouthEast');
+    end
     legend boxoff
 end
 

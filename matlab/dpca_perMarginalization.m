@@ -84,13 +84,21 @@ for m=1:length(Xmargs)
     %[~,S,V] = svd(Xmargs{m});      % this is very slow!
     margVar(m) = sum(Xmargs{m}(:).^2)/totalVar*100;
     
-    %tic
-    XX = Xmargs{m}*Xmargs{m}';
-    [U,S] = eig(XX);
-    S = diag(sqrt(fliplr(diag(S)')));
-    U = fliplr(U);
-    SV = U'*Xmargs{m};
-    %toc
+    if size(Xmargs{m},1)<size(Xmargs{m},2)
+        XX = Xmargs{m}*Xmargs{m}';
+        [U,S] = eig(XX);
+        [~,ind] = sort(abs(diag(S)), 'descend');
+        S = sqrt(S(ind,ind));
+        U = U(:,ind);
+        SV = U'*Xmargs{m};
+    else
+        XX = Xmargs{m}'*Xmargs{m};
+        [U,S] = eig(XX);
+        [~,ind] = sort(abs(diag(S)), 'descend');
+        S = sqrt(S(ind,ind));
+        U = U(:,ind);
+        SV = (U*S)';
+    end        
     
     %PCs = [PCs; S(1:10,1:10)*V(:,1:10)'];
     PCs = [PCs; SV(1:ncompsPerMarg,:)];

@@ -68,6 +68,14 @@ function [accuracyShuffle, brierShuffle] = dpca_classificationShuffled(Xtrial, n
 %                     of cell arrays specifying which marginalizations
 %                     should NOT be split. If not provided, all
 %                     marginalizations will be split.
+%
+% 'simultaneous'    - if the dataset is simultaneously recorded (true) or
+%                     not (false - DEFAULT)
+%
+% 'noiseCovType'    - two possible ways to compute noise covariance matrix:
+%                        'averaged'   - average over conditions
+%                        'pooled'     - pooled over conditions (DEFAULT)
+
 
 % default input parameters
 options = struct('numShuffles',    100,                   ...  
@@ -79,8 +87,10 @@ options = struct('numShuffles',    100,                   ...
                  'timeSplits',      [],                 ...
                  'timeParameter',  [],                  ...
                  'notToSplit',     [],                  ...
-                 'filename',       []);
-
+                 'filename',       [],                  ...
+                 'simultaneous',   false,               ...
+                 'noiseCovType',   'pooled');
+             
 % read input parameters
 optionNames = fieldnames(options);
 if mod(length(varargin),2) == 1
@@ -125,17 +135,25 @@ XtrialCond = reshape(XtrialCond, D, [], T);
 
 for shuffle = 1:options.numShuffles
     if strcmp(options.verbose, 'yes')
+        repTic = tic;
         fprintf(['Shuffle #' num2str(shuffle) ' out of ' num2str(options.numShuffles) ': shuffling... '])
     end
         
     % shuffling PSTHs inside each neuron (preserving time and numOfTrials)
     XtrialCondShuffle = zeros(size(XtrialCond));
-    for n = 1:D
-        presentTrials = find(trialsMissing(n,:) == 0);
+    if ~options.simultaneous
+        for n = 1:D
+            presentTrials = find(trialsMissing(n,:) == 0);
+            shuffledOrder = presentTrials(randperm(length(presentTrials)));
+            XtrialCondShuffle(n,presentTrials,:) = ...
+                XtrialCond(n,shuffledOrder,:);
+        end
+    else
+        presentTrials = find(trialsMissing(1,:) == 0);
         shuffledOrder = presentTrials(randperm(length(presentTrials)));
-        XtrialCondShuffle(n,presentTrials,:) = ...
-            XtrialCond(n,shuffledOrder,:);
-    end    
+        XtrialCondShuffle(:,presentTrials,:) = ...
+            XtrialCond(:,shuffledOrder,:);
+    end
     XtrialShuffle = permute(reshape(XtrialCondShuffle, dim(orderDim)), ...
         orderDim);
     clear XtrialCondShuffle
@@ -159,13 +177,16 @@ for shuffle = 1:options.numShuffles
         'verbose', verbosity,  ...
         'timeSplits', options.timeSplits, ...
         'timeParameter', options.timeParameter, ...
-        'notToSplit', options.notToSplit);
+        'notToSplit', options.notToSplit, ...
+        'simultaneous', options.simultaneous, ...
+        'noiseCovType', options.noiseCovType);
     
     accuracyShuffle(:,:,shuffle) = squeeze(accuracy(:,1,:));
     brierShuffle(:,:,shuffle) = squeeze(brier(:,1,:));
     
     if strcmp(options.verbose, 'yes')
-        fprintf('\n')
+        repTime = toc(repTic);
+        fprintf([' [' num2str(round(repTime)) 's ]\n'])
     end
     clear XtrialShuffle firingRatesAverageShuffle
     

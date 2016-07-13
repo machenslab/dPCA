@@ -90,7 +90,7 @@ end
 % explVar.componentVar = sum(explVar.margVar);
 
 % PCA explained variance
-[~,S,Wpca] = svd(X', 'econ');
+[~,S,~] = svd(X', 'econ');
 S = diag(S);
 S = S(1:size(W,2));
 explVar.cumulativePCA = cumsum(S.^2'/ explVar.totalVar * 100);
@@ -105,6 +105,13 @@ for i=1:size(W,2)
         ZZ = Xmargs{j} - V(:,i)*(W(:,i)'*Xmargs{j});
         explVar.margVar(j,i) = (explVar.totalMarginalizedVar(j) - sum(ZZ(:).^2)) / explVar.totalVar * 100;    
     end
+end
+
+% if dPCA expl var = PCA expl var, then probably the function was supplied
+% with PCA axes instead of dPCA encoder/decoder. In this case it will not
+% return the dPCA explained variance.
+if max(abs(explVar.cumulativePCA-explVar.cumulativeDPCA)) < 1e-10
+    explVar.cumulativeDPCA = [];
 end
 
 % OPTIONAL part : OLD APPROACH

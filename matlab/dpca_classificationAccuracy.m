@@ -73,6 +73,14 @@ function [accuracy, brier] = dpca_classificationAccuracy(Xfull, Xtrial, numOfTri
 %                     of cell arrays specifying which marginalizations
 %                     should NOT be split. If not provided, all
 %                     marginalizations will be split.
+%
+% 'simultaneous'    - if the dataset is simultaneously recorded (true) or
+%                     not (false - DEFAULT)
+%
+% 'noiseCovType'    - two possible ways to compute noise covariance matrix:
+%                        'averaged'   - average over conditions
+%                        'pooled'     - pooled over conditions (DEFAULT)
+
 
 % default input parameters
 options = struct('numComps',       3,                   ...  
@@ -84,7 +92,9 @@ options = struct('numComps',       3,                   ...
                  'timeSplits',      [],                 ...
                  'timeParameter',  [],                  ...
                  'notToSplit',     [],                  ...
-                 'filename',       []);
+                 'filename',       [],                  ...
+                 'simultaneous',   false,               ...
+                 'noiseCovType',   'pooled');
 
 % read input parameters
 optionNames = fieldnames(options);
@@ -100,7 +110,8 @@ for pair = reshape(varargin,2,[])    % pair is {propName; propValue}
 end
 
 Xsum = bsxfun(@times, Xfull, numOfTrials);
-[X2sum,~,Cnoise] = dpca_getNoiseCovariance(Xfull, Xtrial, numOfTrials);
+Cnoise = dpca_getNoiseCovariance(Xfull, Xtrial, numOfTrials, ...
+    'type', options.noiseCovType, 'simultaneous', options.simultaneous);
 
 % find time marginalization
 timeComp = [];
@@ -158,18 +169,18 @@ end
 
 for rep = 1:options.numRep
     if strcmp(options.verbose, 'yes')
-        display(['Repetition # ' num2str(rep) ' out of ' num2str(options.numRep)])
+        repTic = tic;
+        fprintf(['Repetition # ' num2str(rep) ' out of ' num2str(options.numRep) '...'])
     elseif strcmp(options.verbose, 'dots')
         fprintf('.')
     end
     
-    Xtest = dpca_getTestTrials(Xtrial, numOfTrials);
+    [Xtest, XtrainFull] = dpca_getTestTrials(Xtrial, numOfTrials, ...
+        'simultaneous', options.simultaneous);
     Xtrain = bsxfun(@times, Xsum - Xtest, 1./(numOfTrials-1));
 
-    ssTrain = X2sum + bsxfun(@times, Xfull.^2, numOfTrials) ...
-        - Xtest.^2 - bsxfun(@times, Xtrain.^2, (numOfTrials-1));
-    SSnoiseSumOverT = sum(ssTrain, ndims(ssTrain));
-    CnoiseTrain = diag(sum(bsxfun(@times, SSnoiseSumOverT(:,:), 1./(numOfTrials(:,:)-1)),2));
+    CnoiseTrain = dpca_getNoiseCovariance(Xtrain, XtrainFull, numOfTrials-1, ...
+        'simultaneous', options.simultaneous, 'type', options.noiseCovType);
 
     [W,V,whichMarg] = dpca(Xtrain, numCompsToUse, ...
          'combinedParams', options.combinedParams, ...
@@ -241,6 +252,11 @@ for rep = 1:options.numRep
             end
         end
     end
+    
+    if strcmp(options.verbose, 'yes')
+        repTime = toc(repTic);
+        fprintf([' [' num2str(round(repTime)) 's ]\n'])
+    end
 end
 
 for i=1:length(options.decodingClasses)
@@ -253,41 +269,6 @@ brier = bsxfun(@times, sum(brier,4), 1./(options.numRep*numConditions));
 
 accuracy(timeComp,:,:) = NaN;
 brier(timeComp,:,:) = NaN;
-
-if strcmp(options.verbose, 'yes')
-    rows = 1:size(accuracy,1);
-    rows(timeComp) = NaN;
-    rows(rows>timeComp) = rows(rows>timeComp) - 1;
-    
-    figure
-    for i=setdiff(1:size(accuracy,1), timeComp)
-        for j=1:size(accuracy,2)
-            subplot(length(rows)-1,3,(rows(i)-1)*3+j)
-            title(['Marginalization #' num2str(i)])
-            
-            axis([1 size(accuracy,3) 0 1])
-            hold on
-            
-            if ~isempty(options.filename) && exist(options.filename, 'file')
-                vars = whos('-file', options.filename);
-                if ismember('accuracyShuffle', {vars.name})
-                    load(options.filename, 'accuracyShuffle')
-                    maxSh = max(accuracyShuffle(i,:,:),[],3);
-                    minSh = min(accuracyShuffle(i,:,:),[],3);
-                    time = 1:length(maxSh);
-                    h = patch([time fliplr(time)], [maxSh fliplr(minSh)], 'b');
-                    set(h, 'FaceAlpha', 0.5)
-                    set(h, 'EdgeColor', 'none')
-                end
-            end
-            
-            plot(xlim, 1/numClasses(i)*[1 1], 'k')
-            plot(squeeze(accuracy(i,j,:)))
-            
-            plot(squeeze(brier(i,j,:)), 'r')        
-        end
-    end
-end
 
 if ~isempty(options.filename)
     if exist(options.filename, 'file')
