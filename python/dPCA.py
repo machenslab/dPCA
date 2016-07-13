@@ -45,7 +45,7 @@ class dPCA(BaseEstimator):
         the data into marginalizations corresponding to 't', 's' and 'ts'. At times,
         we want to join different marginalizations (like 's' and 'ts'), e.g. if
         we are only interested in the time-modulated stimulus components. In this case,
-        we would pass {'ts' : ['t','ts']}.
+        we would pass {'ts' : ['s','ts']}.
 
     regularizer : None, float, 'auto'
         Regularization parameter. If None or 0, then no regularization is applied.
