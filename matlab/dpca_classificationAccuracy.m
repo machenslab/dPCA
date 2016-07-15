@@ -255,7 +255,7 @@ for rep = 1:options.numRep
     
     if strcmp(options.verbose, 'yes')
         repTime = toc(repTic);
-        fprintf([' [' num2str(round(repTime)) 's ]\n'])
+        fprintf([' [' num2str(round(repTime)) ' s]\n'])
     end
 end
 

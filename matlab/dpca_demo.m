@@ -31,10 +31,10 @@
 
 clear all
 
-N = 100;%100;    % number of neurons
+N = 100;%100;   % number of neurons
 T = 20;%20;     % number of time points
-S = 7;%7;      % number of stimuli
-D = 2;      % number of decisions
+S = 7;%7;       % number of stimuli
+D = 2;          % number of decisions
 E = 20;%20;     % maximal number of trial repetitions
 
 % generating three components
@@ -140,7 +140,7 @@ dpca_plot(firingRatesAverage, W, W, @dpca_plot_default, ...
 dpca_perMarginalization(firingRatesAverage, @dpca_plot_default, ...
    'combinedParams', combinedParams);
 
-%% Step 3: dPCA without regularization
+%% Step 3: dPCA without regularization and ignoring noise covariance
 
 % This is the core function.
 % W is the decoder, V is the encoder (ordered by explained variance),

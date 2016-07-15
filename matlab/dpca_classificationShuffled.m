@@ -186,7 +186,7 @@ for shuffle = 1:options.numShuffles
     
     if strcmp(options.verbose, 'yes')
         repTime = toc(repTic);
-        fprintf([' [' num2str(round(repTime)) 's ]\n'])
+        fprintf([' [' num2str(round(repTime)) ' s]\n'])
     end
     clear XtrialShuffle firingRatesAverageShuffle
     
