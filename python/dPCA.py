@@ -69,8 +69,9 @@ class dPCA(BaseEstimator):
 
     Attributes
     ----------
-    components_ : array, [n_components, n_features]
-        Components with maximum variance.
+    components_ : dictionary
+        Components with maximum variance for each marginalization. Keys refer to marginalization,
+        the values are arrays of type [n_components_in_marginalization, n_features].
 
     explained_variance_ratio_ : array, [n_components]
         Percentage of variance explained by each of the selected components. \
@@ -564,7 +565,8 @@ class dPCA(BaseEstimator):
             regX, regmXs, pregX = X, mXs, pinv(X.reshape((n_features,-1)))
 
         # compute closed-form solution
-        self.P, self.D = self._randomized_dpca(regX,regmXs,pinvX=pregX)
+        self.P, self.D    = self._randomized_dpca(regX,regmXs,pinvX=pregX)
+        self.components_  = self.D
 
     def _zero_mean(self,X):
         """ Subtracts the mean from each observable """
