@@ -6,9 +6,9 @@ LONG_DESCRIPTION = DESCRIPTION
 NAME = "dPCA"
 AUTHOR = "Machens Lab"
 AUTHOR_EMAIL = "christian.machens@neuro.fchampalimaud.org"
-MAINTAINER = "Alex Williams"
-MAINTAINER_EMAIL = "alex.h.willia@gmail.com"
-DOWNLOAD_URL = 'https://github.com/ahwillia/dPCA'
+MAINTAINER = "Wieland Brendel"
+MAINTAINER_EMAIL = "wieland.brendel@neuro.fchampalimaud.org"
+DOWNLOAD_URL = 'https://github.com/machenslab/dPCA'
 LICENSE = 'MIT'
 VERSION = '0.1'
 
