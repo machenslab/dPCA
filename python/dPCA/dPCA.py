@@ -5,6 +5,8 @@
 #
 # License: BSD 3 clause
 
+from __future__ import print_function
+
 import numpy as np
 from collections import OrderedDict
 from itertools import combinations, chain
@@ -20,7 +22,7 @@ import numexpr as ne
 
 import pyximport
 pyximport.install(setup_args={'include_dirs': np.get_include()})
-import nan_shuffle
+from . import nan_shuffle
 
 class dPCA(BaseEstimator):
     """ demixed Principal component analysis (dPCA)
@@ -69,36 +71,18 @@ class dPCA(BaseEstimator):
 
     Attributes
     ----------
-    components_ : array, [n_components, n_features]
-        Components with maximum variance.
-
-    explained_variance_ratio_ : array, [n_components]
-        Percentage of variance explained by each of the selected components. \
-        k is not set then all components are stored and the sum of explained \
-        variances is equal to 1.0
-
-    mean_ : array, [n_features]
-        Per-feature empirical mean, estimated from the training set.
-
-    n_components_ : int
-        The estimated number of components. Relevant when n_components is set
-        to 'mle' or a number between 0 and 1 to select using explained
-        variance.
-
-    noise_variance_ : float
-        The estimated noise covariance following the Probabilistic PCA model
-        from Tipping and Bishop 1999. See "Pattern Recognition and
-        Machine Learning" by C. Bishop, 12.2.1 p. 574 or
-        http://www.miketipping.com/papers/met-mppca.pdf. It is required to
-        computed the estimated data covariance and score samples.
+    explained_variance_ratio_ : dict with arrays, [n_components]
+        Dictionary in which each key refers to one marginalization and the \
+        value is a vector with the percentage of variance explained by each of \
+        the marginal components.
 
     Notes
     -----
     Implements the dPCA model from:
-    D Kobak*, W Brendel*, C Constantinidis, C Feierstein, A Kepecs, Z Mainen, R Romo, \
-    X-L Qi, N Uchida, C Machens
-    Demixed principal component analysis of population activity in higher cortical
-    areas reveals independent representation of task parameters,
+    D Kobak*, W Brendel*, C Constantinidis, C Feierstein, A Kepecs, Z Mainen, \
+    R Romo, X-L Qi, N Uchida, C Machens
+    Demixed principal component analysis of population activity in higher \
+    cortical areas reveals independent representation of task parameters,
 
 
     Examples
@@ -135,13 +119,13 @@ class dPCA(BaseEstimator):
         self.debug = 2
 
         if regularizer == 'auto':
-            print """You chose to determine the regularization parameter automatically. This can
+            print("""You chose to determine the regularization parameter automatically. This can
                     take substantial time and grows linearly with the number of crossvalidation
                     folds. The latter can be set by changing self.n_trials (default = 3). Similarly,
                     use self.protect to set the list of axes that are not supposed to get to get shuffled
                     (e.g. upon splitting the data into test- and training, time-points should always
                     be drawn from the same trial, i.e. self.protect = ['t']). This can significantly
-                    speed up the code."""
+                    speed up the code.""")
 
             self.n_trials = 3
             self.protect = None
@@ -194,11 +178,11 @@ class dPCA(BaseEstimator):
             combinations are returned.
         '''
         # subsets = () (0,) (1,) (2,) (0,1) (0,2) (1,2) (0,1,2)"
-        subsets = list(chain.from_iterable(combinations(range(len(self.labels)), r) for r in xrange(len(self.labels))))
+        subsets = list(chain.from_iterable(combinations(list(range(len(self.labels))), r) for r in range(len(self.labels))))
 
         # delete empty set & add (0,1,2)
         del subsets[0]
-        subsets.append(range(len(self.labels)))
+        subsets.append(list(range(len(self.labels))))
 
         # create dictionary
         pcombs = OrderedDict()
@@ -208,7 +192,7 @@ class dPCA(BaseEstimator):
 
         # condense dict if not None
         if isinstance(self.join,dict) and join:
-            for key, combs in self.join.iteritems():
+            for key, combs in self.join.items():
                 tmp = [pcombs[comb] for comb in combs]
 
                 for comb in combs:
@@ -255,7 +239,7 @@ class dPCA(BaseEstimator):
                 (need for optimization).
             '''
             tmp = np.zeros_like(Y)
-            for key in mYs.keys():
+            for key in list(mYs.keys()):
 
                 mYs[key] = (tmp + mYs[key]).reshape((Y.shape[0],-1))
 
@@ -273,10 +257,10 @@ class dPCA(BaseEstimator):
         pcombs = self._get_parameter_combinations(join=False)
 
         # subtract the mean
-        S = pcombs.values()[-1]    # full set of indices
+        S = list(pcombs.values())[-1]    # full set of indices
 
         if save_memory:
-            for key, phi in pcombs.iteritems():
+            for key, phi in pcombs.items():
                 S_without_phi = list(S - phi)
 
                 # compute marginalization and save
@@ -288,21 +272,22 @@ class dPCA(BaseEstimator):
             # efficient precomputation of means
             pre_mean = {}
 
-            for key, phi in pcombs.iteritems():
+            for key, phi in pcombs.items():
                 if len(key) == 1:
                     pre_mean[key] = mmean(Xres,np.array(list(phi))+1,expand=True)
                 else:
                     pre_mean[key] = mmean(pre_mean[key[:-1]],np.array([list(phi)[-1]])+1,expand=True)
 
             # compute marginalizations
-            for key, phi in pcombs.iteritems():
-                key_without_phi = self.labels.translate(None, key)
+            for key, phi in pcombs.items():
+                key_without_phi = ''.join(filter(lambda ch: ch not in key, self.labels))
+                # self.labels.translate(None, key)
 
                 # build local dictionary for numexpr
                 X = pre_mean[key_without_phi] if len(key_without_phi) > 0 else Xres
 
                 if len(key) > 1:
-                    subsets = list(chain.from_iterable(combinations(key, r) for r in xrange(1,len(key))))
+                    subsets = list(chain.from_iterable(combinations(key, r) for r in range(1,len(key))))
                     subsets = [''.join(subset) for subset in subsets]
                     local_dict = {subset : Xmargs[subset] for subset in subsets}
                     local_dict['X'] = X
@@ -313,7 +298,7 @@ class dPCA(BaseEstimator):
 
         # condense dict if not None
         if isinstance(self.join,dict):
-            for key, combs in self.join.iteritems():
+            for key, combs in self.join.items():
                 Xshape = np.ones(len(self.labels)+1,dtype='int')
                 for comb in combs:
                     sh = np.array(Xmargs[comb].shape)
@@ -334,13 +319,14 @@ class dPCA(BaseEstimator):
     def _optimize_regularization(self,X,trialX,center=True,lams='auto'):
         """ Optimization routine to find optimal regularization parameter.
 
-            TO DO: Routine is pretty dumb right now (go through predetermined list and find minimum). There
-            are several ways to speed it up.
+            TO DO: Routine is pretty dumb right now (go through predetermined
+            list and find minimum). There  are several ways to speed it up.
         """
 
         # center data
         if center:
-            X = X - np.mean(X.reshape((X.shape[0],-1)),1).reshape((X.shape[0],) + len(self.labels)*(1,))
+            X = X - np.mean(X.reshape((X.shape[0],-1)),1).reshape((X.shape[0],)\
+                  + len(self.labels)*(1,))
 
         # compute variance of data
         varX = np.sum(X**2)
@@ -354,27 +340,31 @@ class dPCA(BaseEstimator):
         scores = self.crossval_score(lams,X,trialX,mean=False)
 
         # take mean over total scores
-        totalscore = np.mean(np.sum(np.dstack([scores[key] for key in scores.keys()]),-1),0)
+        totalscore = np.mean(np.sum(np.dstack([scores[key] for key in list(scores.keys())]),-1),0)
 
         # Raise warning if optimal lambda lies at boundaries
         if np.argmin(totalscore) == 0 or np.argmin(totalscore) == len(totalscore) - 1:
             if self.debug > 0:
-                print 'Warning: Optimal regularization parameter lies at the boundary of the search interval. Please provide different search list (key: lams).'
+                print("Warning: Optimal regularization parameter lies at the \
+                       boundary of the search interval. Please provide \
+                       different search list (key: lams).")
 
         # set minimum as new lambda
         self.regularizer = lams[np.argmin(totalscore)]
 
         if self.debug > 1:
-            print 'Optimized regularization, optimal lambda = ', self.regularizer
-            print 'Regularization will be fixed; to compute the optimal parameter again on the next fit, \
-                   please set opt_regularizer_flag to True.'
+            print('Optimized regularization, optimal lambda = ', self.regularizer)
+            print('Regularization will be fixed; to compute the optimal \
+                   parameter again on the next fit, please \
+                   set opt_regularizer_flag to True.')
 
             self.opt_regularizer_flag = False
 
     def crossval_score(self,lams,X,trialX,mean=True):
-        """ Calculates crossvalidation scores for a given set of regularization parameters. To this end
-            it takes one parameter off the list, computes the model on a training set and then validates
-            the reconstruction performance on a validation set.
+        """ Calculates crossvalidation scores for a given set of regularization
+            parameters. To this end it takes one parameter off the list,
+            computes the model on a training set and then validates the
+            reconstruction performance on a validation set.
 
             Parameters
             ----------
@@ -383,8 +373,8 @@ class dPCA(BaseEstimator):
 
             X: array-like, shape (n_samples, n_features_1, n_features_2, ...)
                 Training data, where n_samples in the number of samples
-                and n_features_j is the number of the j-features (where the axis correspond
-                to different parameters).
+                and n_features_j is the number of the j-features (where the
+                axis correspond to different parameters).
 
             trialX: array-like, shape (n_trials, n_samples, n_features_1, n_features_2, ...)
                 Trial-by-trial data. Shape is similar to X but with an additional axis at the beginning
@@ -393,21 +383,22 @@ class dPCA(BaseEstimator):
                 points with NaN.
 
             mean: bool (default: True)
-                Set True if the crossvalidation score should be averaged over all marginalizations,
-                otherwise False.
+                Set True if the crossvalidation score should be averaged over
+                all marginalizations, otherwise False.
 
             Returns
             -------
-            mXs : dictionary, with values corresponding to the marginalized data (and the key refers to the marginalization)
+            mXs : dictionary, with values corresponding to the marginalized
+                  data (and the key refers to the marginalization)
         """
         # placeholder for scores
-        scores = np.zeros((self.n_trials,len(lams))) if mean else {key : np.zeros((self.n_trials,len(lams))) for key in self.marginalizations.keys()}
+        scores = np.zeros((self.n_trials,len(lams))) if mean else {key : np.zeros((self.n_trials,len(lams))) for key in list(self.marginalizations.keys())}
 
         # compute number of samples in each condition
         N_samples = self._get_n_samples(trialX,protect=self.protect)
 
-        for trial in xrange(self.n_trials):
-            print "Starting trial ", trial + 1, "/", self.n_trials
+        for trial in range(self.n_trials):
+            print("Starting trial ", trial + 1, "/", self.n_trials)
 
             # perform split into training and test trials
             trainX, validX = self.train_test_split(X,trialX,N_samples=N_samples)
@@ -426,7 +417,7 @@ class dPCA(BaseEstimator):
                     scores[trial,k] = self._score(validX,validmXs)
                 else:
                     tmp = self._score(validX,validmXs,mean=False)
-                    for key in self.marginalizations.keys():
+                    for key in list(self.marginalizations.keys()):
                         scores[key][trial,k] = tmp[key]
 
         return scores
@@ -441,14 +432,14 @@ class dPCA(BaseEstimator):
         n_features = X.shape[0]
         X = X.reshape((n_features,-1))
 
-        error = {key: 0 for key in mXs.keys()}
-        PDY  = {key : np.dot(self.P[key],np.dot(self.D[key].T,X)) for key in mXs.keys()}
-        trPD = {key : np.sum(self.P[key]*self.D[key],1) for key in mXs.keys()}
+        error = {key: 0 for key in list(mXs.keys())}
+        PDY  = {key : np.dot(self.P[key],np.dot(self.D[key].T,X)) for key in list(mXs.keys())}
+        trPD = {key : np.sum(self.P[key]*self.D[key],1) for key in list(mXs.keys())}
 
-        for key in mXs.keys():
+        for key in list(mXs.keys()):
             error[key] = np.sum((mXs[key] - PDY[key] + trPD[key][:,None]*X)**2)
 
-        return error if not mean else np.sum(error.values())
+        return error if not mean else np.sum(list(error.values()))
 
     def _randomized_dpca(self,X,mXs,pinvX=None):
         """ Solves the dPCA minimization problem analytically by using a randomized SVD solver from sklearn.
@@ -471,7 +462,7 @@ class dPCA(BaseEstimator):
 
         P, D = {}, {}
 
-        for key in mXs.keys():
+        for key in list(mXs.keys()):
             mX = mXs[key].reshape((n_features,-1)) # called X_phi in paper
             C = np.dot(mX,pinvX)
 
@@ -498,7 +489,7 @@ class dPCA(BaseEstimator):
         if not pre_reg:
             regmYs = OrderedDict()
 
-            for key in mYs.keys():
+            for key in list(mYs.keys()):
                 regmYs[key] = np.hstack([mYs[key],np.zeros((n_features,n_features))])
         else:
             regmYs = mYs
@@ -562,7 +553,7 @@ class dPCA(BaseEstimator):
         # compute optimal regularization
         if self.opt_regularizer_flag and optimize:
             if self.debug > 0:
-                print "Start optimizing regularization."
+                print("Start optimizing regularization.")
 
             if trialX is None:
                 raise ValueError('To optimize the regularization parameter, the trial-by-trial data trialX needs to be provided.')
@@ -614,7 +605,7 @@ class dPCA(BaseEstimator):
                 protected = True
             else:
                 protected = False
-                print 'Not all protected axis are at the end! While the algorithm will still work, the performance of the shuffling algorithm will substantially decrease due to unavoidable copies.'
+                print('Not all protected axis are at the end! While the algorithm will still work, the performance of the shuffling algorithm will substantially decrease due to unavoidable copies.')
 
         return protected
 
@@ -820,8 +811,8 @@ class dPCA(BaseEstimator):
             else:
                 scores = {key : np.empty((self.n_components[key],K)) for key in keys}
 
-            for shuffle in xrange(n_splits):
-                print '.',
+            for shuffle in range(n_splits):
+                print('.', end=' ')
 
                 # do train-validation split
                 trainX, validX = self.train_test_split(X,trialX)
@@ -853,32 +844,32 @@ class dPCA(BaseEstimator):
                 # compute classification score
                 for key in keys:
                     ncomps = self.n_components if type(self.n_components) == int else self.n_components[key]
-                    for comp in xrange(ncomps):
+                    for comp in range(ncomps):
                         scores[key][comp] = nan_shuffle.classification(trainZ[key][comp],validZ[key][comp])
 
             return scores
 
         if self.opt_regularizer_flag:
-            print "Regularization not optimized yet; start optimization now."
+            print("Regularization not optimized yet; start optimization now.")
             self._optimize_regularization(X,trialX)
 
-        keys = self.marginalizations.keys()
+        keys = list(self.marginalizations.keys())
         keys.remove(self.labels[-1])
 
         # shuffling is in-place, so we need to copy the data
         trialX = trialX.copy()
 
         # compute score of original data
-        print "Compute score of data: ",
+        print("Compute score of data: ", end=' ')
         true_score = compute_mean_score(X,trialX,n_splits)
-        print "Finished."
+        print("Finished.")
 
         # data collection
         scores = {key : [] for key in keys}
 
         # iterate over shuffles
-        for it in xrange(n_shuffles):
-            print "\rCompute score of shuffled data: ", str(it), "/", str(n_shuffles),
+        for it in range(n_shuffles):
+            print("\rCompute score of shuffled data: ", str(it), "/", str(n_shuffles), end=' ')
 
             # shuffle labels
             self.shuffle_labels(trialX)
@@ -901,7 +892,7 @@ class dPCA(BaseEstimator):
             for key in keys:
                 mask = masks[key]
 
-                for k in xrange(mask.shape[0]):
+                for k in range(mask.shape[0]):
                     masks[key][k,:] = nan_shuffle.denoise_mask(masks[key][k].astype(np.int32),n_consecutive)
 
         if full:
@@ -934,13 +925,25 @@ class dPCA(BaseEstimator):
 
         """
         X = self._zero_mean(X)
+        total_variance = np.sum(X**2)
+
+        def marginal_variances(marginal):
+            ''' Computes the relative variance explained of each component
+                within a marginalization
+            '''
+            D, Xr = self.D[marginal], X.reshape((X.shape[0],-1))
+            return [np.sum(np.dot(D[:,k], Xr)**2) / total_variance for k in range(D.shape[1])]
 
         if marginalization is not None:
-            X_transformed = np.dot(self.D[marginalization].T, X.reshape((X.shape[0],-1))).reshape((self.D[marginalization].shape[1],) + X.shape[1:])
+            D, Xr         = self.D[marginalization], X.reshape((X.shape[0],-1))
+            X_transformed = np.dot(D.T, Xr).reshape((D.shape[1],) + X.shape[1:])
+            self.explained_variance_ratio_ = {marginalization : marginal_variances(marginalization)}
         else:
             X_transformed = {}
-            for key in self.marginalizations.keys():
+            self.explained_variance_ratio_ = {}
+            for key in list(self.marginalizations.keys()):
                 X_transformed[key] = np.dot(self.D[key].T, X.reshape((X.shape[0],-1))).reshape((self.D[key].shape[1],) + X.shape[1:])
+                self.explained_variance_ratio_[key] = marginal_variances(key)
 
         return X_transformed
 
