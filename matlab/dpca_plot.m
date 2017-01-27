@@ -101,10 +101,13 @@ if ~isempty(options.whichMarg) && ...
     subplots = [];
     for i=1:length(margRowSeq)
         if ~isempty(options.componentsSignif) && margRowSeq(i) ~= options.timeMarginalization
-            % selecting only significant components
+            % prefer significant components
             minL = min(length(options.whichMarg), size(options.componentsSignif,1));
             moreComponents = find(options.whichMarg(1:minL) == margRowSeq(i) & ...
                 sum(options.componentsSignif(1:minL,:), 2)'~=0, 3);
+            if length(moreComponents) < 3
+                moreComponents = [moreComponents setdiff(find(options.whichMarg == margRowSeq(i), 3), moreComponents)];
+            end
         else
             moreComponents = find(options.whichMarg == margRowSeq(i), 3);
         end
