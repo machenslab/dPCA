@@ -1,6 +1,4 @@
 from distutils.core import setup
-import numpy
-from Cython.Build import cythonize
 
 DESCRIPTION = "Implements Demixed Principal Components Analysis"
 LONG_DESCRIPTION = DESCRIPTION
@@ -13,8 +11,6 @@ DOWNLOAD_URL = 'https://github.com/machenslab/dPCA/'
 LICENSE = 'MIT'
 VERSION = '0.1'
 
-ext_module = cythonize("dPCA/nan_shuffle.pyx")
-ext_module[0].include_dirs = [numpy.get_include(), '.']
 
 setup(name=NAME,
       version=VERSION,
@@ -28,7 +24,15 @@ setup(name=NAME,
       download_url=DOWNLOAD_URL,
       license=LICENSE,
       packages=['dPCA'],
-      package_data={},
-      requires=['sklearn', 'numexpr'],
-      ext_modules=ext_module
+      package_data={}
       )
+
+from Cython.Build import cythonize
+import numpy
+
+ext_module = cythonize("dPCA/nan_shuffle.pyx")
+ext_module[0].include_dirs = [numpy.get_include(), '.']
+
+setup(
+      ext_modules=ext_module
+)
