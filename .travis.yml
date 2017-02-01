@@ -6,7 +6,9 @@ python:
 before_install:
   - cd ./python
 install:
-  - touch pass.txt
+  - echo foo
+script:
+  - echo foo
   
 before_deploy:
   - cd ./python
