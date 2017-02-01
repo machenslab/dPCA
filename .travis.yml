@@ -1,18 +1,18 @@
 language: python
 sudo: false
 python:
-  - "2.7"
-  - "3.4"
+- '2.7'
+- '3.4'
 before_install:
-  - cd ./python
+- cd ./python
 install:
-  - echo foo
+- echo foo
 script:
-  - echo foo
+- echo foo
 deploy:
   provider: pypi
   user: wielandbrendel
   password:
-    secure: q/dSsERKKFqnjf/VeSn5DA+mmVFFB38cY56hGZfBrbeleWHusXPTOn8magNK2htFOB6O4EcH+OjOzk5tHo8htomrnA+WrmUgqnd47q9j7mtHDIAlLtR6R99fjtabEBsSheFNZVpFwG6OGaqOA7OM/VOEid/p+T912WSubywFo4Vz117tQz6CsW9yf7JkbEkhqOFOjh2cFGsZU9JH/tIBUUydvWIwyQovSjG3aeuo6wioWIES81yM2oGftxbAGMfjkk7T6lPK6VJlNen+d5NIUUQ0HX02Y3LTYOkIdeW1N6kRf6WfyCcduxZjwPvSKjSSI3gc35KVAiqd35Ge3vKKKYypPIY/F8yBiyWNxk3dAEzM9LKeFCkk7q76SfVCMfOLXIe6whpZBC6XiiD8aoNqCvBGMmnN1uJ8EATCuZmr/LPhSafBNfgePo9gbTqguDIDhTf+K0u40avbKgvW+5y4Ukluz/T5/UPxTkqqQC8nq4P4DUWSDYV2oEUdFXpdrpMbChvBuOOcuoP3stg2HgX0CPue/bPMnC2AH78RGIofOzqUIXQ31kbCwa5p7/YiDTy1jOUiR2mcnKraU6dKthiVJpDqtGoAA94I180l9y3uSMD6BCIclDiI5U/BQKc4HCniVkmNdmJK5S8ipOnzEhXgaFkDSDOoqnrCpXrPdx5rObQ=
+    secure: eTi3JIOoahb8qxLMZwwxECuWsHIZ26NWp1ICWc4CnCjOHxS+Kli3W9I1FtTkd6r7tOl5LuPf8iObiMGu/sW3oLP2fELbRIgNsUreFfiNwax+KgnYyfVIKCF0hMT+Qd13mXyrPvHyxJ795UCru+gUYqebNYaB4R5KcJLL1+GaEzqGRIBMrTfZ5vomY2wa2Z/fRvLPWKsAHrs3ErcGoN1XNOJtmCYmwIvejbXOImWmJKgojaqtXQ6ZmvM7ZTAK/G+KKWrnJO1EDVATrheLfbEZUNlCxRt2TZebnIDnqaSHZnKgqpHm5vCkdviLi1cBe68rkugorpvqpRbxOdXL/9CCK/tWH6kTa03etDTUh4FU0JnTVD1KycWXpDsqpbFNFn+kZNLIaHFKtzTPvLwLu3b8+y+lD3XJz9EIe7hUFTkAoi1GzXk7gAGv/3z6vmBYodhECDFQmNRzl2rZlWeu1EUFz/PCDwqhPyg5zNFNmC+/c/BxSX4kPqQKRtHmf1dvoZ84S2tP5dOkQBcY1rolrSeEQ//MxvAWI63qpseTF3qPoQKoX5+kQEwxoNT28wAFSyN+TucbvPDkukWjWMTiMoULXHcCSjxTgZlOaepB7OwZ+1O8XiS2A6NJgEtVMLBId6Zaq4zdqEu+LwQett40hBBZGyR4m8rUjFjyyIv7EYJPT7A=
   on:
     repo: machenslab/dPCA
