@@ -1,0 +1,10 @@
+before_deploy:
+  - cd ./python
+
+deploy:
+  provider: pypi
+  user: wielandbrendel
+  password:
+    secure: q/dSsERKKFqnjf/VeSn5DA+mmVFFB38cY56hGZfBrbeleWHusXPTOn8magNK2htFOB6O4EcH+OjOzk5tHo8htomrnA+WrmUgqnd47q9j7mtHDIAlLtR6R99fjtabEBsSheFNZVpFwG6OGaqOA7OM/VOEid/p+T912WSubywFo4Vz117tQz6CsW9yf7JkbEkhqOFOjh2cFGsZU9JH/tIBUUydvWIwyQovSjG3aeuo6wioWIES81yM2oGftxbAGMfjkk7T6lPK6VJlNen+d5NIUUQ0HX02Y3LTYOkIdeW1N6kRf6WfyCcduxZjwPvSKjSSI3gc35KVAiqd35Ge3vKKKYypPIY/F8yBiyWNxk3dAEzM9LKeFCkk7q76SfVCMfOLXIe6whpZBC6XiiD8aoNqCvBGMmnN1uJ8EATCuZmr/LPhSafBNfgePo9gbTqguDIDhTf+K0u40avbKgvW+5y4Ukluz/T5/UPxTkqqQC8nq4P4DUWSDYV2oEUdFXpdrpMbChvBuOOcuoP3stg2HgX0CPue/bPMnC2AH78RGIofOzqUIXQ31kbCwa5p7/YiDTy1jOUiR2mcnKraU6dKthiVJpDqtGoAA94I180l9y3uSMD6BCIclDiI5U/BQKc4HCniVkmNdmJK5S8ipOnzEhXgaFkDSDOoqnrCpXrPdx5rObQ=
+  on:
+    repo: machenslab/dPCA
