@@ -49,3 +49,7 @@ Example code in `dpca_demo.m` generates surrogate data and provides a walkthroug
 ### Support
 
 Email wieland.brendel@bethgelab.org (Python) or dmitry.kobak@neuro.fchampalimaud.org (Matlab) with any questions.
+
+### Contributors
+
+A big thanks for 3rd party contributions goes to **cboulay**.
