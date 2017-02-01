@@ -1,6 +1,14 @@
-before_deploy:
+language: python
+sudo: false
+python:
+  - "2.7"
+  - "3.4"
+before_install:
   - cd ./python
-
+install:
+  - echo foo
+script:
+  - echo foo
 deploy:
   provider: pypi
   user: wielandbrendel
