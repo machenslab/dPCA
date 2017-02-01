@@ -5,6 +5,8 @@ python:
   - "3.4"
 before_install:
   - cd ./python
+install:
+  - touch pass.txt
   
 before_deploy:
   - cd ./python
