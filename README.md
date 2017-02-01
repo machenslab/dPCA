@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/machenslab/dPCA.svg
+    :target: https://travis-ci.org/machenslab/dPCA
+
 demixed Principal Component Analysis (dPCA)
 ===========================================
 
