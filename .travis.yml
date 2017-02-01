@@ -9,10 +9,6 @@ install:
   - echo foo
 script:
   - echo foo
-  
-before_deploy:
-  - cd ./python
-
 deploy:
   provider: pypi
   user: wielandbrendel
