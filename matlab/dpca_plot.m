@@ -43,6 +43,10 @@ function dpca_plot(Xfull, W, V, plotFunction, varargin)
 %  'X_extra'                - data array used for plotting that can be larger
 %                             (i.e. have more conditions) than the one used
 %                             for dpca computations
+%  'showNonsignificantComponents'
+%                           - display non-signficant components when there
+%                             are fewer significant components than
+%                             subplots
 
 % default input parameters
 options = struct('time',           [], ...   
@@ -56,7 +60,8 @@ options = struct('time',           [], ...
                  'marginalizationColours', [], ...
                  'explainedVar',   [], ...
                  'numCompToShow',  15, ...
-                 'X_extra',        []);
+                 'X_extra',        [], ...
+                 'showNonsignificantComponents', false);
 
 % read input parameters
 optionNames = fieldnames(options);
@@ -105,6 +110,10 @@ if ~isempty(options.whichMarg) && ...
             minL = min(length(options.whichMarg), size(options.componentsSignif,1));
             moreComponents = find(options.whichMarg(1:minL) == margRowSeq(i) & ...
                 sum(options.componentsSignif(1:minL,:), 2)'~=0, 3);
+            if options.showNonsignificantComponents && (length(moreComponents) < 3)
+                % Optionally add non-significant components to fill subplots
+                moreComponents = [moreComponents setdiff(find(options.whichMarg == margRowSeq(i), 3), moreComponents)];
+            end
         else
             moreComponents = find(options.whichMarg == margRowSeq(i), 3);
         end
