@@ -2,3 +2,4 @@ python/dPCA/*.pyc
 python/build
 python/.ipynb_checkpoints
 python/dPCA/nan_shuffle.c
+matlab/tmp_*

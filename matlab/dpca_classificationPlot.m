@@ -80,16 +80,24 @@ timeComp = find(isnan(accuracy(:,1,1)));
 rows(timeComp) = NaN;
 rows(rows>timeComp) = rows(rows>timeComp) - 1;
 
+if isempty(options.marginalizationNames)
+    options.marginalizationNames = arrayfun(@(x)...
+        sprintf('Marg. #%s', x),...
+        string(1:size(accuracy,1)),...
+        'UniformOutput', false);
+    options.marginalizationNames{timeComp} = 'Time';
+end
+
 figure
 for i=setdiff(1:size(accuracy,1), timeComp)
     for j=1:size(accuracy,2)
         subplot(length(rows)-1,3,(rows(i)-1)*3+j)
-        if ~isempty(options.marginalizationNames) && ~isempty(options.whichMarg)
+        if ~isempty(options.whichMarg)
             comp_id = find(options.whichMarg==i, j);
-            title([options.marginalizationNames{i} ' (comp. ' num2str(comp_id(end)) ')'])
         else
-            title([options.marginalizationNames{i} ' # ' num2str(i)])
+            comp_id = j;
         end
+        title([options.marginalizationNames{i} ' (comp. ' num2str(comp_id(end)) ')'])
 
         hold on
         axis([min(acc_time) max(acc_time) 0 1])
