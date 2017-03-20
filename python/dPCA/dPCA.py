@@ -103,7 +103,7 @@ class dPCA(BaseEstimator):
             self.labels = labels
         elif isinstance(labels,int):
             alphabet = 'abcdefghijklmnopqrstuvwxyz'
-            labels = alphabet[:Y.ndim-1]
+            labels = alphabet[:labels]
         else:
             raise TypeError('Wrong type for labels. Please either set labels to the number of variables or provide the axis labels as a single string of characters (like "ts" for time and stimulus)')
 
