@@ -83,20 +83,32 @@ firingRatesAverage = nanmean(firingRates, 5);
 
 %% Define parameter grouping
 
-% parameter groupings
-% 1 - stimulus
-% 2 - decision
-% 3 - time
-% [1 3] - stimulus/time interaction
-% [2 3] - decision/time interaction
-% [1 2] - stimulus/decision interaction
-% [1 2 3] - rest
-% Here we group stimulus with stimulus/time interaction etc. Don't change
-% that if you don't know what you are doing
+% *** Don't change this if you don't know what you are doing! ***
+% firingRates array has [N S D T E] size; herewe ignore the 1st dimension 
+% (neurons), i.e. we have the following parameters:
+%    1 - stimulus 
+%    2 - decision
+%    3 - time
+% There are three pairwise interactions:
+%    [1 3] - stimulus/time interaction
+%    [2 3] - decision/time interaction
+%    [1 2] - stimulus/decision interaction
+% And one three-way interaction:
+%    [1 2 3] - rest
+% As explained in the eLife paper, we group stimulus with stimulus/time interaction etc.:
 
 combinedParams = {{1, [1 3]}, {2, [2 3]}, {3}, {[1 2], [1 2 3]}};
 margNames = {'Stimulus', 'Decision', 'Condition-independent', 'S/D Interaction'};
 margColours = [23 100 171; 187 20 25; 150 150 150; 114 97 171]/256;
+
+% For two parameters (e.g. stimulus and time, but no decision), we would have
+% firingRates array of [N S T E] size (one dimension less, and only the following
+% possible marginalizations:
+%    1 - stimulus
+%    2 - time
+%    [1 2] - stimulus/time interaction
+% They could be grouped as follows: 
+%    combinedParams = {{1, [1 2]}, {2}};
 
 % Time events of interest (e.g. stimulus onset/offset, cues etc.)
 % They are marked on the plots with vertical lines
@@ -172,6 +184,10 @@ dpca_plot(firingRatesAverage, W, V, @dpca_plot_default, ...
 % in a .mat file with a given name. Once computed, you can simply load 
 % lambdas out of this file:
 %   load('tmp_optimalLambdas.mat', 'optimalLambda')
+
+% Please note that this now includes noise covariance matrix Cnoise which
+% tends to provide substantial regularization by itself (even with lambda set
+% to zero).
 
 optimalLambda = dpca_optimizeLambda(firingRatesAverage, firingRates, trialNum, ...
     'combinedParams', combinedParams, ...
