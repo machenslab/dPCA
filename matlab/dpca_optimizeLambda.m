@@ -85,9 +85,9 @@ for pair = reshape(varargin,2,[])    % pair is {propName; propValue}
 	end
 end
 
-if min(numOfTrials) <= 0
+if min(numOfTrials(:)) <= 0
     error('dPCA:tooFewTrials0','Some neurons seem to have no trials in some condition(s).\nPlease ensure that min(numOfTrials) > 0.')
-elseif min(numOfTrials) == 1
+elseif min(numOfTrials(:)) == 1
     error('dPCA:tooFewTrials1','Cannot perform cross-validation when there are neurons \nhaving only one trial per some condition(s). \nPlease ensure that min(numOfTrials) > 1.')
 end
 
