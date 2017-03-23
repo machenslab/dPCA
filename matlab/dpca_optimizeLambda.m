@@ -60,6 +60,7 @@ function [optimalLambda, optimalLambdas] = dpca_optimizeLambda(Xfull, ...
 % 'noiseCovType'    - two possible ways to compute noise covariance matrix:
 %                        'averaged'   - average over conditions
 %                        'pooled'     - pooled over conditions (DEFAULT)
+%                        'none'       - not using noise covariance at all
 
 % default input parameters
 options = struct('numComps',       25,                  ...   
@@ -120,8 +121,12 @@ for rep = 1:options.numRep
 %     SSnoiseSumOverT = sum(ssTrain, ndims(ssTrain));
 %     CnoiseTrain = diag(sum(bsxfun(@times, SSnoiseSumOverT(:,:), 1./(numOfTrials(:,:)-1)),2));
     
-    CnoiseTrain = dpca_getNoiseCovariance(Xtrain, XtrainFull, numOfTrials-1, ...
-        'simultaneous', options.simultaneous, 'type', options.noiseCovType);
+    if ~strcmp(options.noiseCovType, 'none')
+        CnoiseTrain = dpca_getNoiseCovariance(Xtrain, XtrainFull, numOfTrials-1, ...
+                      'simultaneous', options.simultaneous, 'type', options.noiseCovType);
+    else
+    	CnoiseTrain = 0;
+    end	
     
     XtestCen = bsxfun(@minus, Xtest, mean(Xtest(:,:),2));
     XtestMargs = dpca_marginalize(XtestCen, 'combinedParams', options.combinedParams, ...
