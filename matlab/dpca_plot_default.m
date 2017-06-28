@@ -109,8 +109,8 @@ elseif ndims(data) == 4 && size(data,3)==2
     colors = lines(numOfStimuli);
 
     for f=1:numOfStimuli 
-        plot(time, squeeze(data(1, f, 1, :)), '--', 'color', colors(f,:), 'LineWidth', 2)
-        plot(time, squeeze(data(1, f, 2, :)), 'color', colors(f,:), 'LineWidth', 2)
+        plot(time, squeeze(data(1, f, 1, :)), 'color', colors(f,:), 'LineWidth', 2)
+        plot(time, squeeze(data(1, f, 2, :)), '--', 'color', colors(f,:), 'LineWidth', 2)
     end
 
 else
