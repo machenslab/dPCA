@@ -925,7 +925,7 @@ class dPCA(BaseEstimator):
 
         """
         X = self._zero_mean(X)
-        total_variance = np.sum(X**2)
+        total_variance = np.sum((X - np.mean(X))**2)
 
         def marginal_variances(marginal):
             ''' Computes the relative variance explained of each component
