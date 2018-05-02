@@ -290,6 +290,12 @@ if ~isempty(options.explainedVar)
     ylabel('Component variance (%)')
     b = bar(options.explainedVar.margVar(:,1:numCompToShow)' , 'stacked', 'BarWidth', 0.75);
     
+    % fix for newer Matlab versions, May 2018, thanks to Tucker Fisher
+    for idx = 1:numel(b)
+        b(idx).FaceColor = options.marginalizationColours(idx,:);
+    end    
+    % end fix
+    
     caxis([1 length(options.marginalizationColours)+256])
 end
 
