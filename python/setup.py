@@ -13,7 +13,7 @@ DOWNLOAD_URL = 'https://github.com/machenslab/dPCA/'
 LICENSE = 'MIT'
 VERSION = '0.1'
 
-ext_module = cythonize("dPCA/nan_shuffle.pyx")
+ext_module = cythonize(["dPCA/nan_shuffle.pyx"])
 ext_module[0].include_dirs = [numpy.get_include(), '.']
 
 setup(name=NAME,
