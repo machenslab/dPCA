@@ -828,14 +828,13 @@ class dPCA(BaseEstimator):
                     # mean over all axis not in key
                     axset = self.marginalizations[key]
                     axset = axset if type(axset) == set else set.union(*axset)
-                    axes = set(range(len(X.shape)-1)) - axset  # -1 to ignore N dimension
-                    axes = tuple(np.array(list(axes)) + 1)  # + 1 to shift back to original dimensions
-                    trainZ[key] = np.mean(trainZ[key], axis=axes)  # take mean over axes together
-                    validZ[key] = np.mean(validZ[key], axis=axes)
+                    axes = set(range(len(X.shape)-1)) - axset
+                    for ax in axes:
+                        trainZ[key] = np.mean(trainZ[key],axis=ax+1)
+                        validZ[key] = np.mean(validZ[key],axis=ax+1)
 
                     # reshape
-                    axis_time = list(self.marginalizations['t'])[0]  # find time axis directly # (Presuming this originally was intended to be the time axis for the case where X.shape = (N, S, T)?
-                    if axis_time in axset and axis is not None:
+                    if len(X.shape)-2 in axset and axis is not None:
                         trainZ[key] = trainZ[key].reshape((ncomps,-1,K))
                         validZ[key] = validZ[key].reshape((ncomps,-1,K))
                     else:
