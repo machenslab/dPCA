@@ -16,13 +16,7 @@ from scipy.linalg import pinv
 from sklearn.base import BaseEstimator
 from sklearn.utils.extmath import randomized_svd
 import numexpr as ne
-#from ..utils import check_random_state, as_float_array
-#from ..utils import check_array
-#from ..utils.extmath import fast_dot, fast_logdet, randomized_svd
-
-import pyximport
-pyximport.install(setup_args={'include_dirs': np.get_include()})
-from . import nan_shuffle
+from .utils import shuffle2D, classification, denoise_mask
 
 class dPCA(BaseEstimator):
     """ demixed Principal component analysis (dPCA)
@@ -107,7 +101,7 @@ class dPCA(BaseEstimator):
         else:
             raise TypeError('Wrong type for labels. Please either set labels to the number of variables or provide the axis labels as a single string of characters (like "ts" for time and stimulus)')
 
-        self.join = join
+        self._join = join
         self.regularizer = 0 if regularizer == None else regularizer
         self.opt_regularizer_flag = regularizer == 'auto'
         self.n_components = n_components
@@ -174,7 +168,7 @@ class dPCA(BaseEstimator):
 
             {'x' : (0,), 'y' : (1,), 'z' : (2,), 'xy' : (0,1), 'xz' : (0,2), 'yz' : (1,2), 'xyz' : (0,1,2)}
 
-            If join == True, parameter combinations are condensed according to self.join, Otherwise all
+            If join == True, parameter combinations are condensed according to self._join, Otherwise all
             combinations are returned.
         '''
         # subsets = () (0,) (1,) (2,) (0,1) (0,2) (1,2) (0,1,2)"
@@ -191,8 +185,8 @@ class dPCA(BaseEstimator):
             pcombs[key] = set(subset)
 
         # condense dict if not None
-        if isinstance(self.join,dict) and join:
-            for key, combs in self.join.items():
+        if isinstance(self._join,dict) and join:
+            for key, combs in self._join.items():
                 tmp = [pcombs[comb] for comb in combs]
 
                 for comb in combs:
@@ -297,8 +291,8 @@ class dPCA(BaseEstimator):
                     Xmargs[key] = X
 
         # condense dict if not None
-        if isinstance(self.join,dict):
-            for key, combs in self.join.items():
+        if isinstance(self._join,dict):
+            for key, combs in self._join.items():
                 Xshape = np.ones(len(self.labels)+1,dtype='int')
                 for comb in combs:
                     sh = np.array(Xmargs[comb].shape)
@@ -732,7 +726,7 @@ class dPCA(BaseEstimator):
         trialX = trialX.reshape((trialX.shape[0],-1))
 
         # shuffle within non-protected axis
-        nan_shuffle.shuffle2D(trialX)
+        shuffle2D(trialX)
 
         # inverse reshaping of protected axis
         trialX = trialX.reshape(original_shape_protected)
@@ -803,6 +797,8 @@ class dPCA(BaseEstimator):
                     Dictionary with the scores of the shuffled data.
 
         '''
+        assert axis in [None, True]
+        
         def compute_mean_score(X,trialX,n_splits):
             K = 1 if axis is None else X.shape[-1]
 
@@ -829,7 +825,7 @@ class dPCA(BaseEstimator):
                     axset = self.marginalizations[key]
                     axset = axset if type(axset) == set else set.union(*axset)
                     axes = set(range(len(X.shape)-1)) - axset
-                    for ax in axes:
+                    for ax in list(axes)[::-1]:
                         trainZ[key] = np.mean(trainZ[key],axis=ax+1)
                         validZ[key] = np.mean(validZ[key],axis=ax+1)
 
@@ -845,7 +841,7 @@ class dPCA(BaseEstimator):
                 for key in keys:
                     ncomps = self.n_components if type(self.n_components) == int else self.n_components[key]
                     for comp in range(ncomps):
-                        scores[key][comp] = nan_shuffle.classification(trainZ[key][comp],validZ[key][comp])
+                        scores[key][comp] = classification(trainZ[key][comp],validZ[key][comp])
 
             return scores
 
@@ -893,7 +889,7 @@ class dPCA(BaseEstimator):
                 mask = masks[key]
 
                 for k in range(mask.shape[0]):
-                    masks[key][k,:] = nan_shuffle.denoise_mask(masks[key][k].astype(np.int32),n_consecutive)
+                    masks[key][k,:] = denoise_mask(masks[key][k].astype(np.int32),n_consecutive)
 
         if full:
             return masks, true_score, scores
