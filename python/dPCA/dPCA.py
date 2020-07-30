@@ -797,6 +797,8 @@ class dPCA(BaseEstimator):
                     Dictionary with the scores of the shuffled data.
 
         '''
+        assert axis in [None, True]
+        
         def compute_mean_score(X,trialX,n_splits):
             K = 1 if axis is None else X.shape[-1]
 
@@ -823,7 +825,7 @@ class dPCA(BaseEstimator):
                     axset = self.marginalizations[key]
                     axset = axset if type(axset) == set else set.union(*axset)
                     axes = set(range(len(X.shape)-1)) - axset
-                    for ax in axes:
+                    for ax in list(axes)[::-1]:
                         trainZ[key] = np.mean(trainZ[key],axis=ax+1)
                         validZ[key] = np.mean(validZ[key],axis=ax+1)
 
