@@ -3,13 +3,20 @@ demixed Principal Component Analysis (dPCA)
 
 dPCA is a linear dimensionality reduction technique that automatically discovers and highlights the essential features of complex population activities. The population activity is decomposed into a few demixed components that capture most of the variance in the data and that highlight the dynamic tuning of the population to various task parameters, such as stimuli, decisions, rewards, etc.
 
-> D Kobak<sup>+</sup>, W Brendel<sup>+</sup>, C Constantinidis, CE Feierstein,
-A Kepecs, ZF Mainen, X-L Qi, R Romo, N Uchida, CK Machens<br>
-> **Demixed principal component analysis of neural population data**<br>
-> eLife 2016, https://elifesciences.org/content/5/e10989<br>
-> (arXiv link: http://arxiv.org/abs/1410.6031)
+.. code-block::
 
-This repository provides easy to use Python and MATLAB implementations of dPCA as well as example code.
+    @article{kobak2016dpca,
+       title={Demixed principal component analysis of neural population data},
+       volume={5},
+       ISSN={2050-084X},
+       url={http://dx.doi.org/10.7554/eLife.10989},
+       DOI={10.7554/elife.10989},
+       journal={eLife},
+       publisher={eLife Sciences Publications, Ltd},
+       author={Kobak, Dmitry and Brendel, Wieland and Constantinidis, Christos and Feierstein, Claudia E and Kepecs, Adam and Mainen, Zachary F and Qi, Xue-Lian and Romo, Ranulfo and Uchida, Naoshige and Machens, Christian K},
+       year={2016},
+       month={Apr}
+    }
 
 ## Use dPCA
 
