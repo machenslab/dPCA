@@ -803,9 +803,9 @@ class dPCA(BaseEstimator):
             K = 1 if axis is None else X.shape[-1]
 
             if type(self.n_components) == int:
-                scores = {key : np.empty((self.n_components,K)) for key in keys}
+                scores = {key : np.empty((self.n_components, n_splits, K)) for key in keys}
             else:
-                scores = {key : np.empty((self.n_components[key],K)) for key in keys}
+                scores = {key : np.empty((self.n_components[key], n_splits, K)) for key in keys}
 
             for shuffle in range(n_splits):
                 print('.', end=' ')
@@ -841,8 +841,11 @@ class dPCA(BaseEstimator):
                 for key in keys:
                     ncomps = self.n_components if type(self.n_components) == int else self.n_components[key]
                     for comp in range(ncomps):
-                        scores[key][comp] = classification(trainZ[key][comp],validZ[key][comp])
+                        scores[key][comp, shuffle] = classification(trainZ[key][comp],validZ[key][comp])
 
+            for key in keys:
+                scores[key] = np.nanmean(scores[key], axis=1)
+                        
             return scores
 
         if self.opt_regularizer_flag:
