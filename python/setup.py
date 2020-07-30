@@ -19,7 +19,7 @@ MAINTAINER = "Wieland Brendel"
 MAINTAINER_EMAIL = "wieland.brendel@uni-tuebingen.de"
 DOWNLOAD_URL = 'https://github.com/machenslab/dPCA/'
 LICENSE = 'MIT'
-VERSION = '1.0'
+VERSION = '1.0.5'
 
 setup(name=NAME,
       version=VERSION,
