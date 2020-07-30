@@ -83,7 +83,7 @@ class dPCA(BaseEstimator):
     --------
 
     >>> import numpy as np
-    >>> from sklearn.decomposition import dPCA
+    >>> from dPCA import dPCA
     >>> X = np.array([[-1, -1], [-2, -1], [-3, -2], [1, 1], [2, 1], [3, 2]])
     >>> dpca = dPCA(n_components=2)
     >>> dpca.fit(X)
