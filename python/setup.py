@@ -1,25 +1,30 @@
-from distutils.core import setup
-from Cython.Build import cythonize
-import numpy
+from setuptools import setup
+from os.path import join, dirname
+
+try:
+    # obtain long description from README
+    readme_path = join(dirname(__file__), "README.rst")
+    with open(readme_path, encoding="utf-8") as f:
+        README = f.read()
+        # remove raw html not supported by PyPI
+        README = "\n".join(README.split("\n")[3:])
+except IOError:
+    README = ""
 
 DESCRIPTION = "Implements Demixed Principal Components Analysis"
-LONG_DESCRIPTION = DESCRIPTION
 NAME = "dPCA"
 AUTHOR = "Machens Lab"
-AUTHOR_EMAIL = "wieland.brendel@neuro.fchampalimaud.org"
+AUTHOR_EMAIL = "wieland.brendel@uni-tuebingen.de"
 MAINTAINER = "Wieland Brendel"
-MAINTAINER_EMAIL = "wieland.brendel@neuro.fchampalimaud.org"
+MAINTAINER_EMAIL = "wieland.brendel@uni-tuebingen.de"
 DOWNLOAD_URL = 'https://github.com/machenslab/dPCA/'
 LICENSE = 'MIT'
-VERSION = '0.1'
-
-ext_module = cythonize(["dPCA/nan_shuffle.pyx"])
-ext_module[0].include_dirs = [numpy.get_include(), '.']
+VERSION = '1.0'
 
 setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,
-      long_description=LONG_DESCRIPTION,
+      long_description=README,
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       maintainer=MAINTAINER,
@@ -29,6 +34,5 @@ setup(name=NAME,
       license=LICENSE,
       packages=['dPCA'],
       package_data={},
-      requires=['sklearn', 'numexpr'],
-      ext_modules=ext_module
+      requires=['sklearn', 'numexpr', 'numba']
       )
