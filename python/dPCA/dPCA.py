@@ -441,12 +441,12 @@ class dPCA(BaseEstimator):
             Returns
             -------
             P : dict mapping strings to array-like,
-                Holds encoding matrices for each term in variance decompostions (used to transform data
-                to low-dimensional space).
+                Holds encoding matrices for each term in variance decompostions (used in inverse_transform
+                to map from low-dimensional representation back to original data space).
 
             D : dict mapping strings to array-like,
-                Holds decoding matrices for each term in variance decompostions (used in inverse_transform
-                to map from low-dimensional representation back to original data space).
+                Holds decoding matrices for each term in variance decompostions (used to transform data
+                to low-dimensional space).
 
         """
 
