@@ -101,7 +101,7 @@ class dPCA(BaseEstimator):
         else:
             raise TypeError('Wrong type for labels. Please either set labels to the number of variables or provide the axis labels as a single string of characters (like "ts" for time and stimulus)')
 
-        self.join = join
+        self._join = join
         self.regularizer = 0 if regularizer == None else regularizer
         self.opt_regularizer_flag = regularizer == 'auto'
         self.n_components = n_components
@@ -168,7 +168,7 @@ class dPCA(BaseEstimator):
 
             {'x' : (0,), 'y' : (1,), 'z' : (2,), 'xy' : (0,1), 'xz' : (0,2), 'yz' : (1,2), 'xyz' : (0,1,2)}
 
-            If join == True, parameter combinations are condensed according to self.join, Otherwise all
+            If join == True, parameter combinations are condensed according to self._join, Otherwise all
             combinations are returned.
         '''
         # subsets = () (0,) (1,) (2,) (0,1) (0,2) (1,2) (0,1,2)"
@@ -185,8 +185,8 @@ class dPCA(BaseEstimator):
             pcombs[key] = set(subset)
 
         # condense dict if not None
-        if isinstance(self.join,dict) and join:
-            for key, combs in self.join.items():
+        if isinstance(self._join,dict) and join:
+            for key, combs in self._join.items():
                 tmp = [pcombs[comb] for comb in combs]
 
                 for comb in combs:
@@ -291,8 +291,8 @@ class dPCA(BaseEstimator):
                     Xmargs[key] = X
 
         # condense dict if not None
-        if isinstance(self.join,dict):
-            for key, combs in self.join.items():
+        if isinstance(self._join,dict):
+            for key, combs in self._join.items():
                 Xshape = np.ones(len(self.labels)+1,dtype='int')
                 for comb in combs:
                     sh = np.array(Xmargs[comb].shape)
