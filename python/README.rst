@@ -34,8 +34,8 @@ API of dPCA is similar to sklearn. To use dPCA, you should first import dPCA and
 
 .. code-block:: python
 
-   from dpca import dPCA
-   dpca = dPCA(labels, n_components, regularizer)
+   from dPCA import dPCA
+   dpca = dPCA.dPCA(labels, n_components, regularizer)
    Z = dpca.fit_transform(X)
    
 The required initialization parameters are:
