@@ -1,5 +1,5 @@
 numpy
 scipy
 numexpr
-sklearn
+scikit-learn
 numba
