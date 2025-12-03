@@ -34,5 +34,5 @@ setup(name=NAME,
       license=LICENSE,
       packages=['dPCA'],
       package_data={},
-      install_requires=['numpy', 'scipy', 'sklearn', 'numexpr', 'numba']
+      install_requires=['numpy', 'scipy', 'scikit-learn', 'numexpr', 'numba']
       )
