@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dPCA"
+version = "1.0.5"
+description = "Implements Demixed Principal Components Analysis"
+readme = "README.rst"
+license = {text = "MIT"}
+authors = [
+    {name = "Machens Lab", email = "wieland.brendel@uni-tuebingen.de"}
+]
+maintainers = [
+    {name = "Wieland Brendel", email = "wieland.brendel@uni-tuebingen.de"}
+]
+requires-python = ">=3.7"
+dependencies = [
+    "numpy",
+    "scipy",
+    "scikit-learn",
+    "numexpr",
+    "numba"
+]
+
+[project.urls]
+Homepage = "https://github.com/machenslab/dPCA/"
+Download = "https://github.com/machenslab/dPCA/"
+
+[tool.setuptools.packages.find]
+include = ["dPCA*"]

@@ -97,11 +97,12 @@ class dPCA(BaseEstimator):
             self.labels = labels
         elif isinstance(labels,int):
             alphabet = 'abcdefghijklmnopqrstuvwxyz'
-            labels = alphabet[:labels]
+            self.labels = alphabet[:labels]
         else:
             raise TypeError('Wrong type for labels. Please either set labels to the number of variables or provide the axis labels as a single string of characters (like "ts" for time and stimulus)')
 
         self._join = join
+        self.join = join
         self.regularizer = 0 if regularizer == None else regularizer
         self.opt_regularizer_flag = regularizer == 'auto'
         self.n_components = n_components
@@ -651,7 +652,7 @@ class dPCA(BaseEstimator):
         protected = self._check_protected(trialX,protect)
 
         # reorder matrix to protect certain axis (for speedup)
-        if ~protected:
+        if not(protected):
             # turn crossval_protect into index listX
             axes = [self.labels.index(ax) + 2 for ax in protect]
 
@@ -680,7 +681,7 @@ class dPCA(BaseEstimator):
         trainX = (X*(N_samples/(N_samples-1))[(np.s_[:],)*n_unprotect + (None,)*n_protect] - blindX/(N_samples-1)[(np.s_[:],)*n_unprotect + (None,)*n_protect])
 
         # inverse rolled axis in blindX
-        if ~protected:
+        if not(protected):
             blindX = self._roll_back(blindX[...,None],axes,invert=True)[...,0]
             trainX = self._roll_back(trainX[...,None],axes,invert=True)[...,0]
 
@@ -710,7 +711,7 @@ class dPCA(BaseEstimator):
         protected = self._check_protected(trialX,protect)
 
         # reorder matrix to protect certain axis (for speedup)
-        if ~protected:
+        if not(protected):
             # turn crossval_protect into index list
             axes = [self.labels.index(ax) + 2 for ax in protect]
 
