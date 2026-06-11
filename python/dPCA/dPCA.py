@@ -925,14 +925,15 @@ class dPCA(BaseEstimator):
 
         """
         X = self._zero_mean(X)
-        total_variance = np.sum((X - np.mean(X))**2)
+        total_variance = np.sum(X**2)
+        Xmargs = self._marginalize(X)
 
         def marginal_variances(marginal):
             ''' Computes the relative variance explained of each component
                 within a marginalization
             '''
-            D, Xr = self.D[marginal], X.reshape((X.shape[0],-1))
-            return [np.sum(np.dot(D[:,k], Xr)**2) / total_variance for k in range(D.shape[1])]
+            D, P, Xmarg = self.D[marginal], self.P[marginal], Xmargs[marginal]
+            return [(np.sum(Xmarg**2)-np.sum((Xmarg-np.outer(P[:, k], np.dot(D[:,k], Xmarg)))**2)) / total_variance for k in range(D.shape[1])]
 
         if marginalization is not None:
             D, Xr         = self.D[marginalization], X.reshape((X.shape[0],-1))
