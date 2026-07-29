@@ -15,7 +15,7 @@ This repository provides easy to use Python and MATLAB implementations of dPCA a
 
 Simple example code for surrogate data can be found in [**dpca_demo.ipynb**](http://nbviewer.ipython.org/github/wielandbrendel/dPCA/blob/master/python/dPCA_demo.ipynb) and **dpca_demo.m**.
 
-**Update July 2026:** Note that for the analysis in our eLife paper we used our Matlab package. Our Python package provides the core dPCA functionality but does not implement all bells and whistles described in the paper. Anton Sobinov used Claude to convert our Matlab implementation into Python; see https://github.com/SobinovLab/matlab_dpca.  
+**Update July 2026:** Note that for the analysis in our eLife paper we used our Matlab package. Our Python package provides the core dPCA functionality but does not implement all bells and whistles described in the paper. Anton Sobinov used Claude to convert our Matlab implementation into Python; see https://github.com/SobinovLab/matlab_dpca_in_python.  
 
 ### Python package
 
